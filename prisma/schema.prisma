@@ -1,0 +1,201 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum FileTypes {
+  IMAGE
+  VIDEO
+  PDF
+  EXCEL
+  WORD
+  PPT
+  TXT
+}
+
+enum UserRoles {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  CONFIRMED
+  BANED
+}
+
+enum AcademicSystem {
+  ENG
+  LMD
+  CLASSIC
+}
+
+enum DegreeCycle {
+  LICENSE
+  MASTER
+  DOCTORATE
+  ENGINEERING
+  CLASSIC
+}
+
+model University {
+  id              String           @id @default(uuid())
+  name            String
+  short_name      String           @db.VarChar(50)
+  city            String
+  address         String?
+  email           String?
+  website         String?
+  phone           String?
+  fculties        Faculty[]
+  updated_at      DateTime         @updatedAt
+  created_at      DateTime         @default(now())
+  studentProfiles StudentProfile[]
+}
+
+model Faculty {
+  id            Int        @id @default(autoincrement())
+  name          String
+  code          String     @db.VarChar(50)
+  university_id String
+  university    University @relation(fields: [university_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  fields        Field[]
+  updated_at    DateTime   @updatedAt
+  created_at    DateTime   @default(now())
+}
+
+model Field {
+  id              Int              @id @default(autoincrement())
+  name            String
+  code            String
+  academic_system AcademicSystem
+  levels          Level[]
+  faculty_id      Int
+  faculty         Faculty          @relation(fields: [faculty_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  updated_at      DateTime         @updatedAt
+  created_at      DateTime         @default(now())
+  studentProfiles StudentProfile[]
+}
+
+model Level {
+  id         Int         @id @default(autoincrement())
+  name       String
+  cycle      DegreeCycle
+  is_final   Boolean
+  field_id   Int
+  field      Field       @relation(fields: [field_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  updated_at DateTime    @updatedAt
+  created_at DateTime    @default(now())
+  modules    Module[]
+
+  @@unique([field_id, name])
+}
+
+model Module {
+  id         Int      @id @default(autoincrement())
+  name       String
+  code       String
+  level_id   Int
+  level      Level    @relation(fields: [level_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  courses    Course[]
+  updated_at DateTime @updatedAt
+  created_at DateTime @default(now())
+
+  @@index([level_id])
+}
+
+model Course {
+  id                String             @id @default(uuid())
+  name              String
+  code              String
+  description       String
+  courseSections    CourseSection[]
+  module_id         Int
+  module            Module             @relation(fields: [module_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  // author_id
+  // author
+  enrolled_students StudentProfile[]
+  updated_at        DateTime           @updatedAt
+  created_at        DateTime           @default(now())
+  courseEnrollments CourseEnrollment[]
+}
+
+model CourseSection {
+  id                Int                @id @default(autoincrement())
+  order             Int
+  title             String             @db.VarChar(120)
+  content           String?            @db.LongText
+  course_id         String
+  course            Course             @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  materials         CourseMaterial[]
+  updated_at        DateTime           @updatedAt
+  created_at        DateTime           @default(now())
+  courseEnrollments CourseEnrollment[]
+}
+
+model CourseMaterial {
+  id                Int           @id @default(autoincrement())
+  name              String
+  type              FileTypes
+  link              String
+  course_section_id Int
+  course_section    CourseSection @relation(fields: [course_section_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  created_at        DateTime      @default(now())
+}
+
+model User {
+  id              String          @id @default(uuid())
+  email           String          @unique
+  password        String
+  student_id      String?         @unique
+  role            UserRoles       @default(STUDENT)
+  status          UserStatus      @default(PENDING)
+  student_profile StudentProfile?
+  deleted_at      DateTime?
+  updated_at      DateTime        @updatedAt
+  created_at      DateTime        @default(now())
+}
+
+model StudentProfile {
+  id         Int    @id @default(autoincrement())
+  first_name String @db.VarChar(35)
+  last_name  String @db.VarChar(35)
+  bio        String @db.VarChar(255)
+  avatar_url String
+
+  field_id Int
+  field    Field @relation(fields: [field_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  univeristy_id String
+  university    University @relation(fields: [univeristy_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  enrolled_courses Course[]
+
+  user_id           String             @unique
+  user              User               @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  courseEnrollments CourseEnrollment[]
+}
+
+model CourseEnrollment {
+  id         Int            @id @default(autoincrement())
+  student_id Int
+  student    StudentProfile @relation(fields: [student_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  course_id  String
+  course     Course         @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  current_course_section_id Int?
+  current_course_section    CourseSection? @relation(fields: [current_course_section_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  updated_at                DateTime       @updatedAt
+  created_at                DateTime       @default(now())
+}
