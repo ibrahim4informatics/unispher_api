@@ -62,17 +62,30 @@ model University {
   updated_at      DateTime         @updatedAt
   created_at      DateTime         @default(now())
   studentProfiles StudentProfile[]
+  teacherProfiles TeacherProfile[]
 }
 
 model Faculty {
-  id            Int        @id @default(autoincrement())
+  id            Int          @id @default(autoincrement())
   name          String
-  code          String     @db.VarChar(50)
+  code          String       @db.VarChar(50)
   university_id String
-  university    University @relation(fields: [university_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  fields        Field[]
-  updated_at    DateTime   @updatedAt
-  created_at    DateTime   @default(now())
+  university    University   @relation(fields: [university_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  departments   Department[]
+  updated_at    DateTime     @updatedAt
+  created_at    DateTime     @default(now())
+}
+
+model Department {
+  id         Int             @id @default(autoincrement())
+  name       String
+  code       String
+  faculty_id Int
+  faculty    Faculty         @relation(fields: [faculty_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  fields     Field[]
+  leader     TeacherProfile?
+  updated_at DateTime        @updatedAt
+  created_at DateTime        @default(now())
 }
 
 model Field {
@@ -82,7 +95,7 @@ model Field {
   academic_system AcademicSystem
   levels          Level[]
   faculty_id      Int
-  faculty         Faculty          @relation(fields: [faculty_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  department      Department       @relation(fields: [faculty_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   updated_at      DateTime         @updatedAt
   created_at      DateTime         @default(now())
   studentProfiles StudentProfile[]
@@ -154,6 +167,20 @@ model CourseMaterial {
   created_at        DateTime      @default(now())
 }
 
+model CourseEnrollment {
+  id                        Int            @id @default(autoincrement())
+  student_id                Int
+  student                   StudentProfile @relation(fields: [student_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  course_id                 String
+  course                    Course         @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  current_course_section_id Int?
+  current_course_section    CourseSection? @relation(fields: [current_course_section_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  updated_at                DateTime       @updatedAt
+  created_at                DateTime       @default(now())
+
+  @@unique([student_id, course_id])
+}
+
 model User {
   id              String          @id @default(uuid())
   email           String          @unique
@@ -187,15 +214,17 @@ model StudentProfile {
   courseEnrollments CourseEnrollment[]
 }
 
-model CourseEnrollment {
-  id         Int            @id @default(autoincrement())
-  student_id Int
-  student    StudentProfile @relation(fields: [student_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  course_id  String
-  course     Course         @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+model TeacherProfile {
+  id         Int    @id @default(autoincrement())
+  first_name String @db.VarChar(35)
+  last_name  String @db.VarChar(35)
+  bio        String @db.VarChar(255)
+  avatar_url String
 
-  current_course_section_id Int?
-  current_course_section    CourseSection? @relation(fields: [current_course_section_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  updated_at                DateTime       @updatedAt
-  created_at                DateTime       @default(now())
+  is_department_leader  Boolean     @default(false)
+  leading_department_id Int?        @unique
+  leading_department    Department? @relation(fields: [leading_department_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  univeristy_id String
+  university    University @relation(fields: [univeristy_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
