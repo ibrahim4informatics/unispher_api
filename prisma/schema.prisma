@@ -13,6 +13,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum AdminType {
+  SUPER_ADMIN
+  UNIVERSITY_ADMIN
+  MODERATOR
+}
+
 enum FileTypes {
   IMAGE
   VIDEO
@@ -49,6 +55,15 @@ enum DegreeCycle {
   CLASSIC
 }
 
+enum AcademicTitle {
+  ASSISTANT
+  LECTURER
+  PROFESSOR
+  DOCTOR
+  RESEARCHER
+  NONE
+}
+
 model University {
   id              String           @id @default(uuid())
   name            String
@@ -63,6 +78,8 @@ model University {
   created_at      DateTime         @default(now())
   studentProfiles StudentProfile[]
   teacherProfiles TeacherProfile[]
+  adminProfiles   AdminProfile[]
+  departments     Department[]
 }
 
 model Faculty {
@@ -77,15 +94,17 @@ model Faculty {
 }
 
 model Department {
-  id         Int             @id @default(autoincrement())
-  name       String
-  code       String
-  faculty_id Int
-  faculty    Faculty         @relation(fields: [faculty_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  fields     Field[]
-  leader     TeacherProfile?
-  updated_at DateTime        @updatedAt
-  created_at DateTime        @default(now())
+  id            Int             @id @default(autoincrement())
+  name          String
+  code          String
+  faculty_id    Int
+  faculty       Faculty         @relation(fields: [faculty_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  university_id String
+  university    University      @relation(fields: [university_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  fields        Field[]
+  leader        TeacherProfile?
+  updated_at    DateTime        @updatedAt
+  created_at    DateTime        @default(now())
 }
 
 model Field {
@@ -94,8 +113,8 @@ model Field {
   code            String
   academic_system AcademicSystem
   levels          Level[]
-  faculty_id      Int
-  department      Department       @relation(fields: [faculty_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  department_id   Int
+  department      Department       @relation(fields: [department_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   updated_at      DateTime         @updatedAt
   created_at      DateTime         @default(now())
   studentProfiles StudentProfile[]
@@ -136,8 +155,8 @@ model Course {
   courseSections    CourseSection[]
   module_id         Int
   module            Module             @relation(fields: [module_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  // author_id
-  // author
+  publisher_id      Int
+  publisher         TeacherProfile     @relation(fields: [publisher_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   enrolled_students StudentProfile[]
   updated_at        DateTime           @updatedAt
   created_at        DateTime           @default(now())
@@ -183,48 +202,81 @@ model CourseEnrollment {
 
 model User {
   id              String          @id @default(uuid())
+  first_name      String          @db.VarChar(35)
+  last_name       String          @db.VarChar(35)
+  bio             String?         @db.VarChar(255)
+  avatar_url      String?
   email           String          @unique
   password        String
   student_id      String?         @unique
   role            UserRoles       @default(STUDENT)
   status          UserStatus      @default(PENDING)
   student_profile StudentProfile?
+  teacher_profile TeacherProfile?
+  admin_profile   AdminProfile?
   deleted_at      DateTime?
   updated_at      DateTime        @updatedAt
   created_at      DateTime        @default(now())
 }
 
 model StudentProfile {
-  id         Int    @id @default(autoincrement())
-  first_name String @db.VarChar(35)
-  last_name  String @db.VarChar(35)
-  bio        String @db.VarChar(255)
-  avatar_url String
-
-  field_id Int
-  field    Field @relation(fields: [field_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-  univeristy_id String
-  university    University @relation(fields: [univeristy_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-  enrolled_courses Course[]
-
+  id                Int                @id @default(autoincrement())
+  field_id          Int
+  field             Field              @relation(fields: [field_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  univeristy_id     String
+  university        University         @relation(fields: [univeristy_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  enrolled_courses  Course[]
   user_id           String             @unique
   user              User               @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   courseEnrollments CourseEnrollment[]
 }
 
 model TeacherProfile {
-  id         Int    @id @default(autoincrement())
-  first_name String @db.VarChar(35)
-  last_name  String @db.VarChar(35)
-  bio        String @db.VarChar(255)
-  avatar_url String
+  id                  Int           @id @default(autoincrement())
+  phone_number        String?       @db.VarChar(20)
+  university_of_study String
+  field_of_study      String
+  specialization      String
+  academic_title      AcademicTitle
 
-  is_department_leader  Boolean     @default(false)
   leading_department_id Int?        @unique
   leading_department    Department? @relation(fields: [leading_department_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   univeristy_id String
   university    University @relation(fields: [univeristy_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  user_id           String   @unique
+  user              User     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  published_courses Course[]
+  updated_at        DateTime @updatedAt
+  created_at        DateTime @default(now())
+}
+
+model AdminProfile {
+  id                Int          @id @default(autoincrement())
+  univeristy_id     String?
+  university        University?  @relation(fields: [univeristy_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  admin_type        AdminType
+  last_login_at    DateTime?
+  login_fails_count Int          @default(0)
+
+  permissions       Permission[]
+  user_id           String       @unique
+  user              User         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  updated_at        DateTime     @updatedAt
+  created_at        DateTime     @default(now())
+}
+
+model Permission {
+  id         Int          @id @default(autoincrement())
+  model_name String
+  admin_id   Int
+  admin      AdminProfile @relation(fields: [admin_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  can_write  Boolean
+  can_read   Boolean
+  can_delete Boolean
+  updated_at DateTime     @updatedAt
+  created_at DateTime     @default(now())
+
+  @@unique([admin_id, model_name])
 }
