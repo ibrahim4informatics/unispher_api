@@ -2,8 +2,6 @@ import { NextFunction, Request, Response } from "express";
 import { AppError } from "../shared/errors/AppError";
 
 export default (err: any, req: Request, res: Response, next: NextFunction) => {
-    console.error("midle");
-    console.error(err instanceof AppError);
     if (err instanceof AppError) {
         return res.status(err.statusCode).json({
             success: false,
