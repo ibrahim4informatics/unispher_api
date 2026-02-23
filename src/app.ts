@@ -1,9 +1,10 @@
 import express, { Request, Response } from "express";
-import db from "./config/db";
-
+import authRouter from "./auth/auth.routes";
 const app = express();
 
 app.use(express.json());
+
+app.use("/api/auth", authRouter);
 
 
 
