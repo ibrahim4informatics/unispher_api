@@ -259,7 +259,6 @@ model AdminProfile {
   admin_type        AdminType
   last_login_at    DateTime?
   login_fails_count Int          @default(0)
-
   permissions       Permission[]
   user_id           String       @unique
   user              User         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
