@@ -219,24 +219,25 @@ model Otp {
 }
 
 model User {
-  id              String          @id @default(uuid())
-  first_name      String          @db.VarChar(35)
-  last_name       String          @db.VarChar(35)
-  bio             String?         @db.VarChar(255)
-  avatar_url      String?
-  email           String          @unique
-  password        String
-  student_id      String?         @unique
-  role            UserRoles       @default(STUDENT)
-  status          UserStatus      @default(PENDING)
-  sessions       Session[]
-  otps           Otp[]
-  student_profile StudentProfile?
-  teacher_profile TeacherProfile?
-  admin_profile   AdminProfile?
-  deleted_at      DateTime?
-  updated_at      DateTime        @updatedAt
-  created_at      DateTime        @default(now())
+  id                   String          @id @default(uuid())
+  first_name           String          @db.VarChar(35)
+  last_name            String          @db.VarChar(35)
+  bio                  String?         @db.VarChar(255)
+  avatar_url           String?
+  email                String          @unique
+  password             String
+  student_id           String?         @unique
+  role                 UserRoles       @default(STUDENT)
+  status               UserStatus      @default(PENDING)
+  onboarding_completed Boolean         @default(false)
+  sessions             Session[]
+  otps                 Otp[]
+  student_profile      StudentProfile?
+  teacher_profile      TeacherProfile?
+  admin_profile        AdminProfile?
+  deleted_at           DateTime?
+  updated_at           DateTime        @updatedAt
+  created_at           DateTime        @default(now())
 }
 
 model StudentProfile {
@@ -273,18 +274,18 @@ model TeacherProfile {
 }
 
 model AdminProfile {
-  id                Int          @id @default(autoincrement())
+  id                Int         @id @default(autoincrement())
   univeristy_id     String?
-  university        University?  @relation(fields: [univeristy_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  university        University? @relation(fields: [univeristy_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
   admin_type        AdminType
-  last_login_at    DateTime?
-  login_fails_count Int          @default(0)
+  last_login_at     DateTime?
+  login_fails_count Int         @default(0)
 
-  permissions       Permission[]
-  user_id           String       @unique
-  user              User         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  updated_at        DateTime     @updatedAt
-  created_at        DateTime     @default(now())
+  permissions Permission[]
+  user_id     String       @unique
+  user        User         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  updated_at  DateTime     @updatedAt
+  created_at  DateTime     @default(now())
 }
 
 model Permission {
