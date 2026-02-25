@@ -1,10 +1,10 @@
 
 
 import { Router } from "express";
-import { loginController, registerUserController } from "./auth.controllers";
+import { loginController, refreshTokenController, registerUserController } from "./auth.controllers";
 import { asyncHandler } from "../shared/asyncHandler";
 import validate from "../midlewares/validate.midleware";
-import { UserLoginBodySchema, UserRegisterBodySchema } from "./auth.dto";
+import { RefreshTokenBodySchema, UserLoginBodySchema, UserRegisterBodySchema } from "./auth.dto";
 
 
 const router = Router();
@@ -13,5 +13,6 @@ const router = Router();
 
 router.post("/register",validate(UserRegisterBodySchema),asyncHandler(registerUserController))
 router.post("/login",validate(UserLoginBodySchema),asyncHandler(loginController))
+router.post("/refresh-token", validate(RefreshTokenBodySchema), asyncHandler(refreshTokenController));
 
 export default router;

@@ -28,11 +28,11 @@ const verifyAccessToken = (token: string) => {
 const verifyRefreshToken = (token: string) => {
     try {
         const payload = jwt.verify(token, JWT_CONFIG.refreshToken.secret!);
-        return payload;
+        return payload as UserAuthPayload;
     }
 
     catch (err) {
-        return err;
+        return false;
 
     }
 }

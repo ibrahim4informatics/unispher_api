@@ -58,6 +58,19 @@ export const UserRegisterBodySchema = z.object({
 
 export type UserRegisterBody = z.infer<typeof UserRegisterBodySchema>;
 
+/**
+ * Refresh Token Dto
+ */
+
+export const RefreshTokenBodySchema = z.object({
+    refresh_token: z.jwt({ error: ({ input }) => !input ? "the refresh token is required" : "invalid jwt token" })
+})
+
+export type RefreshTokenBody = z.infer<typeof RefreshTokenBodySchema>
+
+
+
+
 
 /**
  * Sessions Dtos
