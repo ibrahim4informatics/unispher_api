@@ -1,7 +1,8 @@
 import { type UserAuthPayload } from "./auth.types"
-import jwt, { JsonWebTokenError, JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { JWT_CONFIG } from "./auth.constants";
-
+import crypto from "crypto";
+import ENV from "../config/ENV";
 const generateAccessToken = (payload: UserAuthPayload): string => {
     const token = jwt.sign(payload, JWT_CONFIG.accessToken.secret!, { expiresIn: "15m" });
     return token;
@@ -37,6 +38,13 @@ const verifyRefreshToken = (token: string) => {
     }
 }
 
+
+const hashRefreshToken = (token:string)=>{
+
+    return crypto.createHmac("sha256", ENV.REFRESH_TOKEN_HASH_SECRET!).update(token,"utf-8").digest("hex");
+
+}
+
 export {
-    generateAccessToken, generateRefreshToken, verifyAccessToken, verifyRefreshToken
+    generateAccessToken, generateRefreshToken, verifyAccessToken, verifyRefreshToken, hashRefreshToken
 }

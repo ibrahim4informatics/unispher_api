@@ -5,20 +5,19 @@ import { BadRequestError } from "../shared/errors/BadRequestError";
 import { hash, verify } from "../shared/services/argon.service";
 import { UnauthorizedError } from "../shared/errors/UnauthorizedError";
 import { ForbiddenError } from "../shared/errors/ForbidenError";
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "./auth.utils";
+import { generateAccessToken, generateRefreshToken, hashRefreshToken, verifyRefreshToken } from "./auth.utils";
 
 
 
 
 const getSessionByToken = async (refresh_token: string) => {
-    const token = await hash(refresh_token);
+    const token = hashRefreshToken(refresh_token);
     const sesssion = await db.session.findUnique({ where: { token } });
     return sesssion;
 }
 
-
 const createSession = async (session: Session) => {
-    const token = await hash(session.token);
+    const token = hashRefreshToken (session.token);
     const session_exists = await db.session.findUnique({ where: { token } })
     if (session_exists) throw new ForbiddenError("invalid session try again");
     const newSession = await db.session.create({
@@ -89,8 +88,8 @@ const loginUserService = async (data: UserLoginBody, device: string) => {
 const refreshTokenService = async (refresh_token: string) => {
     const payload = verifyRefreshToken(refresh_token);
     if (!payload) throw new UnauthorizedError("user is not authentificated");
-    const session = await db.session.findUnique({ where: { token: await hash(refresh_token) } });
-    if(!session || !session.is_expired || (session.expires_at && session.expires_at < new Date())) throw new UnauthorizedError("invalid or expired session login again");
+    const session = await getSessionByToken(refresh_token);
+    if(!session || session.is_expired || (session.expires_at && session.expires_at < new Date())) throw new UnauthorizedError("invalid or expired session login again");
     const accessToken = generateAccessToken({email:payload.email,id:payload.id});
     return accessToken;
 }
