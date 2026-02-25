@@ -1,4 +1,8 @@
 import { z } from "zod";
+
+/**
+ * Users Dtos
+ */
 /**
  * Password Regex to ensure strong password
  * 1 Upper Case Letter at least
@@ -9,7 +13,7 @@ import { z } from "zod";
 const PASSWORD_RULES = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#^()_\-+=])[A-Za-z\d@$!%*?&.#^()_\-+=]{8,}$/
 export const UserLoginBodySchema = z.object({
 
-    password: z.string()
+    password: z.string({ error: "Password is required" })
         .min(8, { error: "Password must be at least 8 characters" })
         .max(100, { error: "Password is too long" })
         .regex(PASSWORD_RULES, { error: "Password must include uppercase, lowercase, number, and special character" }),
@@ -51,5 +55,19 @@ export const UserRegisterBodySchema = z.object({
     if (role === "TEACHER" && student_id) context.addIssue({ code: "custom", path: ["root"], message: "Teacher has no student id" })
 
 })
+
 export type UserRegisterBody = z.infer<typeof UserRegisterBodySchema>;
 
+
+/**
+ * Sessions Dtos
+ */
+
+export const SessionSchema = z.object({
+    user_id: z.uuid({ error: ({ input }) => !input ? "user id is required" : "invalid user id" }),
+    device: z.string({ error: "device name is required" }),
+    token: z.string({ error: "token is required" })
+})
+
+
+export type Session = z.infer<typeof SessionSchema>
