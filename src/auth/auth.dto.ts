@@ -65,8 +65,19 @@ export type UserRegisterBody = z.infer<typeof UserRegisterBodySchema>;
 export const RefreshTokenBodySchema = z.object({
     refresh_token: z.jwt({ error: ({ input }) => !input ? "the refresh token is required" : "invalid jwt token" })
 })
-
 export type RefreshTokenBody = z.infer<typeof RefreshTokenBodySchema>
+
+/**
+ * Reset Passwords Dtos
+ */
+
+
+export const SendResetPasswordOtpBodySchema = z.object({
+    email: z.email({ error: ({ input }) => !input ? "email is required for reset password" : "invalid email" }),
+})
+
+export type SendResetPasswordOtpBody = z.infer<typeof SendResetPasswordOtpBodySchema>
+
 
 
 

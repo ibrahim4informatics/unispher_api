@@ -5,7 +5,10 @@ import { BadRequestError } from "../shared/errors/BadRequestError";
 import { hash, verify } from "../shared/services/argon.service";
 import { UnauthorizedError } from "../shared/errors/UnauthorizedError";
 import { ForbiddenError } from "../shared/errors/ForbidenError";
-import { generateAccessToken, generateRefreshToken, hashRefreshToken, verifyRefreshToken } from "./auth.utils";
+import { generateAccessToken, generateRefreshToken, generateResetPasswordOtpMail, hashRefreshToken, verifyRefreshToken } from "./auth.utils";
+import { sendMail } from "../shared/services/nodemailer.service";
+import otpGenerator from "otp-generator";
+
 
 
 
@@ -17,7 +20,7 @@ const getSessionByToken = async (refresh_token: string) => {
 }
 
 const createSession = async (session: Session) => {
-    const token = hashRefreshToken (session.token);
+    const token = hashRefreshToken(session.token);
     const session_exists = await db.session.findUnique({ where: { token } })
     if (session_exists) throw new ForbiddenError("invalid session try again");
     const newSession = await db.session.create({
@@ -89,15 +92,38 @@ const refreshTokenService = async (refresh_token: string) => {
     const payload = verifyRefreshToken(refresh_token);
     if (!payload) throw new UnauthorizedError("user is not authentificated");
     const session = await getSessionByToken(refresh_token);
-    if(!session || session.is_expired || (session.expires_at && session.expires_at < new Date())) throw new UnauthorizedError("invalid or expired session login again");
-    const accessToken = generateAccessToken({email:payload.email,id:payload.id});
+    if (!session || session.is_expired || (session.expires_at && session.expires_at < new Date())) throw new UnauthorizedError("invalid or expired session login again");
+    const accessToken = generateAccessToken({ email: payload.email, id: payload.id });
     return accessToken;
 }
 
+
+const sendPasswordOtpService = async (user_email: string) => {
+
+    const user = await db.user.findUnique({ where: { email: user_email } });
+
+    if (!user) throw new BadRequestError("Email provided is invalid");
+    const otp_code = otpGenerator.generate(6, {digits:true, specialChars:false,upperCaseAlphabets:false, lowerCaseAlphabets:false});
+
+    // Create otp in db
+    await db.otp.create({
+        data: {
+            code: otp_code,
+            user_id: user.id,
+        }
+    })
+    const result = await sendMail({
+        sender: '"Unisphere"<appunisphere@gmail.com>',
+        to: user_email,
+        html: generateResetPasswordOtpMail(otp_code, user.first_name)
+    });
+    return { result, user_id: user.id };
+}
 
 
 export {
     registerUserService,
     loginUserService,
-    refreshTokenService
+    refreshTokenService,
+    sendPasswordOtpService
 }

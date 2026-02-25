@@ -216,6 +216,7 @@ model Otp {
   user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   code       String
   created_at DateTime @default(now())
+  @@unique([user_id, code])
 }
 
 model User {

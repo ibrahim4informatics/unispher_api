@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { RefreshTokenBody, UserLoginBody, type UserRegisterBody } from "./auth.dto";
-import { loginUserService, refreshTokenService, registerUserService } from "./auth.services";
+import { RefreshTokenBody, SendResetPasswordOtpBody, UserLoginBody, type UserRegisterBody } from "./auth.dto";
+import { loginUserService, refreshTokenService, registerUserService, sendPasswordOtpService } from "./auth.services";
 
 const registerUserController = async (request: Request, res: Response) => {
     const body: UserRegisterBody = request.body;
@@ -18,14 +18,22 @@ const loginController = async (req: Request, res: Response) => {
 }
 
 
-const refreshTokenController = async (req:Request, res:Response)=> {
-    const body:RefreshTokenBody = req.body;
+const refreshTokenController = async (req: Request, res: Response) => {
+    const body: RefreshTokenBody = req.body;
     const accessToken = await refreshTokenService(body.refresh_token);
-    return res.status(200).json({accessToken});
+    return res.status(200).json({ accessToken });
+}
+
+const sendResetOtpController = async (req: Request, res: Response) => {
+    const body: SendResetPasswordOtpBody = req.body;
+    const { user_id, result } = await sendPasswordOtpService(body.email);
+    return res.status(200).json({ user_id, result });
+
 }
 
 export {
     registerUserController,
     loginController,
-    refreshTokenController
+    refreshTokenController,
+    sendResetOtpController,
 }
