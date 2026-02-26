@@ -38,15 +38,31 @@ const verifyRefreshToken = (token: string) => {
     }
 }
 
+const generateOtpVerifiedToken = (user_id: string) => {
+    const token = jwt.sign({ user_id }, ENV.RESET_PASSWORD_TOKEN_SECRET!, { expiresIn: "2m" });
+    return token;
+}
 
-const hashRefreshToken = (token:string)=>{
+const verfyOtpVerfiedToken = (token: string) => {
+    try {
+        const payload = jwt.verify(token, ENV.RESET_PASSWORD_TOKEN_SECRET!);
+        return payload as { user_id: string }
+    }
 
-    return crypto.createHmac("sha256", ENV.REFRESH_TOKEN_HASH_SECRET!).update(token,"utf-8").digest("hex");
+    catch {
+        return false
+    }
+}
+
+
+const hashRefreshToken = (token: string) => {
+
+    return crypto.createHmac("sha256", ENV.REFRESH_TOKEN_HASH_SECRET!).update(token, "utf-8").digest("hex");
 
 }
 
 
-const generateResetPasswordOtpMail = (otp:string, first_name:string)=>{
+const generateResetPasswordOtpMail = (otp: string, first_name: string) => {
     return `
         <!DOCTYPE html>
         <html>
@@ -136,5 +152,5 @@ const generateResetPasswordOtpMail = (otp:string, first_name:string)=>{
 
 export {
     generateAccessToken, generateRefreshToken, verifyAccessToken, verifyRefreshToken, hashRefreshToken,
-    generateResetPasswordOtpMail
+    generateResetPasswordOtpMail, generateOtpVerifiedToken, verfyOtpVerfiedToken
 }

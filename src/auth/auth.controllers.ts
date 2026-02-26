@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { RefreshTokenBody, SendResetPasswordOtpBody, UserLoginBody, type UserRegisterBody } from "./auth.dto";
-import { loginUserService, refreshTokenService, registerUserService, sendPasswordOtpService } from "./auth.services";
+import { RefreshTokenBody, ResetPasswordBody, SendResetPasswordOtpBody, UserLoginBody, VerifyOtpBody, type UserRegisterBody } from "./auth.dto";
+import { loginUserService, refreshTokenService, registerUserService, resetPasswordService, resetPasswordVeirfyOtpService, sendPasswordOtpService } from "./auth.services";
 
 const registerUserController = async (request: Request, res: Response) => {
     const body: UserRegisterBody = request.body;
@@ -31,9 +31,25 @@ const sendResetOtpController = async (req: Request, res: Response) => {
 
 }
 
+const verifyResetOtpController = async (req: Request, res: Response) => {
+    const body: VerifyOtpBody = req.body;
+    const { verified, reset_token } = await resetPasswordVeirfyOtpService(body.otp_code, body.user_id)
+    return res.status(200).json({ verified, reset_token });
+}
+
+const resetPasswordController = async (req: Request, res: Response) => {
+    const body: ResetPasswordBody = req.body;
+    const { password_changed } = await resetPasswordService(body);
+    return res.status(200).json({ password_changed })
+}
+
+
+
 export {
     registerUserController,
     loginController,
     refreshTokenController,
     sendResetOtpController,
+    verifyResetOtpController,
+    resetPasswordController
 }

@@ -79,19 +79,28 @@ export const SendResetPasswordOtpBodySchema = z.object({
 export type SendResetPasswordOtpBody = z.infer<typeof SendResetPasswordOtpBodySchema>
 
 
+export const VerifyOtpBodySchema = z.object({
+    user_id: z.uuid({ error: ({ input }) => !input ? "user id is required for verfication" : "user id is invalid" }),
+    otp_code: z.string({ error: "otp code is required for verification" }).length(6, { error: "otp has 6 digits only" }).regex(/\d{6}/, { error: "otp code contains only 6 numbers" })
+})
+export type VerifyOtpBody = z.infer<typeof VerifyOtpBodySchema>;
 
 
+export const ResetPasswordBodySchema = z.object({
+    reset_token: z.jwt({ error: ({ input }) => !input ? "the reset token is required" : "invalid token format" }),
+    new_password: z.string()
+        .min(8, { error: "Password must be at least 8 characters" })
+        .max(100, { error: "Password is too long" })
+        .regex(PASSWORD_RULES, { error: "Password must include uppercase, lowercase, number, and special character" }),
 
-
+});
+export type ResetPasswordBody = z.infer<typeof ResetPasswordBodySchema>;
 /**
  * Sessions Dtos
  */
-
 export const SessionSchema = z.object({
     user_id: z.uuid({ error: ({ input }) => !input ? "user id is required" : "invalid user id" }),
     device: z.string({ error: "device name is required" }),
     token: z.string({ error: "token is required" })
 })
-
-
 export type Session = z.infer<typeof SessionSchema>

@@ -1,11 +1,11 @@
 import { User } from "@prisma/client";
-import { Session, UserLoginBody, UserRegisterBody } from "./auth.dto";
+import { ResetPasswordBody, Session, UserLoginBody, UserRegisterBody } from "./auth.dto";
 import db from "../config/db";
 import { BadRequestError } from "../shared/errors/BadRequestError";
 import { hash, verify } from "../shared/services/argon.service";
 import { UnauthorizedError } from "../shared/errors/UnauthorizedError";
 import { ForbiddenError } from "../shared/errors/ForbidenError";
-import { generateAccessToken, generateRefreshToken, generateResetPasswordOtpMail, hashRefreshToken, verifyRefreshToken } from "./auth.utils";
+import { generateAccessToken, generateOtpVerifiedToken, generateRefreshToken, generateResetPasswordOtpMail, hashRefreshToken, verfyOtpVerfiedToken, verifyRefreshToken } from "./auth.utils";
 import { sendMail } from "../shared/services/nodemailer.service";
 import otpGenerator from "otp-generator";
 
@@ -103,7 +103,7 @@ const sendPasswordOtpService = async (user_email: string) => {
     const user = await db.user.findUnique({ where: { email: user_email } });
 
     if (!user) throw new BadRequestError("Email provided is invalid");
-    const otp_code = otpGenerator.generate(6, {digits:true, specialChars:false,upperCaseAlphabets:false, lowerCaseAlphabets:false});
+    const otp_code = otpGenerator.generate(6, { digits: true, specialChars: false, upperCaseAlphabets: false, lowerCaseAlphabets: false });
 
     // Create otp in db
     await db.otp.create({
@@ -120,10 +120,45 @@ const sendPasswordOtpService = async (user_email: string) => {
     return { result, user_id: user.id };
 }
 
+const resetPasswordVeirfyOtpService = async (otp_code: string, user_id: string) => {
+
+    const otp = await db.otp.findUnique({
+        where: {
+            user_id_code: {
+                user_id, code: otp_code
+            }
+        }
+    });
+
+    const timeDif = otp ? new Date().getTime() - otp.created_at.getTime() : 10 * 60 * 1000;
+    const timeDiffMin = Math.floor(timeDif / (1000 * 60));
+    if (!otp || timeDiffMin >= 10) throw new BadRequestError("Invalid or expired otp code");
+
+    await db.otp.delete({ where: { id: otp.id } });
+    const reset_token = generateOtpVerifiedToken(user_id);
+    return { verified: true, reset_token };
+}
+
+
+const resetPasswordService = async (resetPasswordBody: ResetPasswordBody) => {
+    const payload = verfyOtpVerfiedToken(resetPasswordBody.reset_token);
+    if (!payload) throw new ForbiddenError("Can not reset password try again");
+    const user = await db.user.findUnique({ where: { id: payload.user_id } });
+    if (!user) throw new ForbiddenError("Can not reset password invalid data");
+    const hashPassword = await hash(resetPasswordBody.new_password);
+    await db.user.update({ where: { id: user.id }, data: { password: hashPassword } })
+    return {
+        password_changed: true
+    }
+
+}
+
 
 export {
     registerUserService,
     loginUserService,
     refreshTokenService,
-    sendPasswordOtpService
+    sendPasswordOtpService,
+    resetPasswordVeirfyOtpService,
+    resetPasswordService
 }

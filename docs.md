@@ -232,3 +232,176 @@ console.log(response.data.accessToken);
 - Request validation is handled by `RefreshTokenBodySchema` in [src/auth/auth.dto.ts](src/auth/auth.dto.ts).
 - The controller returns `{ accessToken }` on success ([src/auth/auth.controllers.ts](src/auth/auth.controllers.ts)).
 - The service verifies JWT payload, validates hashed session state in DB, then issues a new access token ([src/auth/auth.services.ts](src/auth/auth.services.ts)).
+
+---
+
+**Auth - Send Reset OTP**
+
+- **Endpoint:** POST /api/auth/reset
+- **Description:** Sends a 6-digit OTP to the user email for password reset flow.
+- **Files:** [src/auth/auth.routes.ts](src/auth/auth.routes.ts), [src/auth/auth.controllers.ts](src/auth/auth.controllers.ts), [src/auth/auth.services.ts](src/auth/auth.services.ts), [src/auth/auth.dto.ts](src/auth/auth.dto.ts)
+
+**Request**
+- **Content-Type:** application/json
+- **Body schema:**
+	- **email**: string (required) — must be a valid email
+
+**Responses**
+- **200 OK**: OTP mail send attempted
+	- Body: `{ user_id: string, result: any }`
+- **400 Bad Request**:
+	- Validation error (invalid/missing email)
+	- `Email provided is invalid` when no user exists with that email
+- **500 Internal Server Error**: Unexpected server error
+
+**Examples**
+
+Request:
+
+```json
+{
+	"email": "john.smith@example.com"
+}
+```
+
+Curl example:
+
+```bash
+curl -X POST "http://localhost:3000/api/auth/reset" \
+	-H "Content-Type: application/json" \
+	-d '{"email":"john.smith@example.com"}'
+```
+
+Axios example:
+
+```ts
+import axios from "axios";
+
+const response = await axios.post("http://localhost:3000/api/auth/reset", {
+	email: "john.smith@example.com"
+});
+
+console.log(response.data.user_id, response.data.result);
+```
+
+**Implementation notes**
+- Request validation is handled by `SendResetPasswordOtpBodySchema` in [src/auth/auth.dto.ts](src/auth/auth.dto.ts).
+- The service creates an OTP row and sends an email template through nodemailer ([src/auth/auth.services.ts](src/auth/auth.services.ts), [src/auth/auth.utils.ts](src/auth/auth.utils.ts)).
+
+---
+
+**Auth - Verify Reset OTP**
+
+- **Endpoint:** POST /api/auth/reset/verify
+- **Description:** Verifies OTP and returns a short-lived reset token used in the final password reset request.
+- **Files:** [src/auth/auth.routes.ts](src/auth/auth.routes.ts), [src/auth/auth.controllers.ts](src/auth/auth.controllers.ts), [src/auth/auth.services.ts](src/auth/auth.services.ts), [src/auth/auth.dto.ts](src/auth/auth.dto.ts), [src/auth/auth.utils.ts](src/auth/auth.utils.ts)
+
+**Request**
+- **Content-Type:** application/json
+- **Body schema:**
+	- **user_id**: string (required) — UUID
+	- **otp_code**: string (required) — 6 numeric digits
+
+**Responses**
+- **200 OK**: OTP verified
+	- Body: `{ verified: true, reset_token: string }`
+- **400 Bad Request**:
+	- Validation error (invalid UUID / invalid OTP format)
+	- `Invalid or expired otp code`
+- **500 Internal Server Error**: Unexpected server error
+
+**Examples**
+
+Request:
+
+```json
+{
+	"user_id": "0f2a3473-6a59-4f01-8c81-bf75644f1aa2",
+	"otp_code": "123456"
+}
+```
+
+Curl example:
+
+```bash
+curl -X POST "http://localhost:3000/api/auth/reset/verify" \
+	-H "Content-Type: application/json" \
+	-d '{"user_id":"0f2a3473-6a59-4f01-8c81-bf75644f1aa2","otp_code":"123456"}'
+```
+
+Axios example:
+
+```ts
+import axios from "axios";
+
+const response = await axios.post("http://localhost:3000/api/auth/reset/verify", {
+	user_id: "0f2a3473-6a59-4f01-8c81-bf75644f1aa2",
+	otp_code: "123456"
+});
+
+console.log(response.data.verified, response.data.reset_token);
+```
+
+**Implementation notes**
+- Request validation is handled by `VerifyOtpBodySchema` in [src/auth/auth.dto.ts](src/auth/auth.dto.ts).
+- OTP is validated with a 10-minute window, then consumed (deleted), and a reset token is issued ([src/auth/auth.services.ts](src/auth/auth.services.ts)).
+- Reset token expiry is `2m` from issuance ([src/auth/auth.utils.ts](src/auth/auth.utils.ts)).
+
+---
+
+**Auth - Reset Password**
+
+- **Endpoint:** PATCH /api/auth/reset
+- **Description:** Resets user password using the reset token from OTP verification.
+- **Files:** [src/auth/auth.routes.ts](src/auth/auth.routes.ts), [src/auth/auth.services.ts](src/auth/auth.services.ts), [src/auth/auth.dto.ts](src/auth/auth.dto.ts), [src/auth/auth.utils.ts](src/auth/auth.utils.ts)
+
+**Request**
+- **Content-Type:** application/json
+- **Body schema:**
+	- **reset_token**: string (required) — JWT format
+	- **new_password**: string (required) — min 8, includes uppercase, lowercase, number, special char
+
+**Responses**
+- **200 OK**: Password reset successful
+	- Body: `{ password_changed: true }`
+- **400 Bad Request**: Validation error (invalid token format/password rules)
+- **403 Forbidden**:
+	- `Can not reset password try again` when reset token verification fails/expired
+	- `Can not reset password invalid data` when token payload user is invalid
+- **500 Internal Server Error**: Unexpected server error
+
+**Examples**
+
+Request:
+
+```json
+{
+	"reset_token": "<reset_token_from_verify_endpoint>",
+	"new_password": "N3wStrongP@ss!"
+}
+```
+
+Curl example:
+
+```bash
+curl -X PATCH "http://localhost:3000/api/auth/reset" \
+	-H "Content-Type: application/json" \
+	-d '{"reset_token":"<reset_token_from_verify_endpoint>","new_password":"N3wStrongP@ss!"}'
+```
+
+Axios example:
+
+```ts
+import axios from "axios";
+
+const response = await axios.patch("http://localhost:3000/api/auth/reset", {
+	reset_token: "<reset_token_from_verify_endpoint>",
+	new_password: "N3wStrongP@ss!"
+});
+
+console.log(response.data.password_changed);
+```
+
+**Implementation notes**
+- Request validation is handled by `ResetPasswordBodySchema` in [src/auth/auth.dto.ts](src/auth/auth.dto.ts).
+- Service verifies reset token payload, resolves user, hashes the new password, then updates user credentials ([src/auth/auth.services.ts](src/auth/auth.services.ts)).
