@@ -95,6 +95,18 @@ export const ResetPasswordBodySchema = z.object({
 
 });
 export type ResetPasswordBody = z.infer<typeof ResetPasswordBodySchema>;
+
+
+/**
+ * Log out dtos
+ */
+
+export const LogoutBodySchema = z.object({
+    refresh_token: z.jwt({ error: ({ input }) => !input ? "refresh token is required for log out" : "invalid token provided" })
+})
+
+export type LogoutBody = z.infer<typeof LogoutBodySchema>
+
 /**
  * Sessions Dtos
  */
