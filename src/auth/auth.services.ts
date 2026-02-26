@@ -227,13 +227,13 @@ const resetPasswordService = async (resetPasswordBody: ResetPasswordBody) => {
  * Logs out a user by invalidating the associated refresh-token session.
  * @param logoutBody Logout payload containing refresh token.
  * @throws NotFoundError When the session is invalid or expired.
- * @returns Session deletion status.
+ * @returns Session deletion status and message.
  */
 const userLogoutService = async (logoutBody: LogoutBody) => {
     const session = await getSessionByToken(logoutBody.refresh_token);
     if (!session || session.is_expired || (session.expires_at && session.expires_at < new Date())) throw new NotFoundError("invalid session data");
     const deleteStatus = await deleteSessionById(session.id);
-    return { deleteStatus }
+    return { deleteStatus, message: "user logout success!" }
 }
 
 
