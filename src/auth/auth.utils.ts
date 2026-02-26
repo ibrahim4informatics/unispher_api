@@ -39,7 +39,7 @@ const verifyRefreshToken = (token: string) => {
 }
 
 const generateOtpVerifiedToken = (user_id: string) => {
-    const token = jwt.sign({ user_id }, ENV.RESET_PASSWORD_TOKEN_SECRET!, { expiresIn: "2m" });
+    const token = jwt.sign({ user_id }, ENV.RESET_PASSWORD_TOKEN_SECRET!, { expiresIn: "10m" });
     return token;
 }
 
