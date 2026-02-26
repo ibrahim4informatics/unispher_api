@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { RefreshTokenBody, ResetPasswordBody, SendResetPasswordOtpBody, UserLoginBody, VerifyOtpBody, type UserRegisterBody } from "./auth.dto";
-import { loginUserService, refreshTokenService, registerUserService, resetPasswordService, resetPasswordVeirfyOtpService, sendPasswordOtpService } from "./auth.services";
+import { LogoutBody, RefreshTokenBody, ResetPasswordBody, SendResetPasswordOtpBody, UserLoginBody, VerifyOtpBody, type UserRegisterBody } from "./auth.dto";
+import { loginUserService, refreshTokenService, registerUserService, resetPasswordService, resetPasswordVeirfyOtpService, sendPasswordOtpService, userLogoutService } from "./auth.services";
 
 const registerUserController = async (request: Request, res: Response) => {
     const body: UserRegisterBody = request.body;
@@ -43,6 +43,12 @@ const resetPasswordController = async (req: Request, res: Response) => {
     return res.status(200).json({ password_changed })
 }
 
+const userLogoutController = async (req:Request, res:Response)=>{
+    const body:LogoutBody = req.body;
+    const result = userLogoutService(body);
+    return res.status(200).json(result);
+}
+
 
 
 export {
@@ -51,5 +57,6 @@ export {
     refreshTokenController,
     sendResetOtpController,
     verifyResetOtpController,
-    resetPasswordController
+    resetPasswordController,
+    userLogoutController
 }
