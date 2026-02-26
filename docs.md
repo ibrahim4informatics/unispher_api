@@ -264,7 +264,6 @@ Request:
 }
 ```
 
-Curl example:
 
 ```bash
 curl -X POST "http://localhost:3000/api/auth/reset" \
@@ -405,3 +404,69 @@ console.log(response.data.password_changed);
 **Implementation notes**
 - Request validation is handled by `ResetPasswordBodySchema` in [src/auth/auth.dto.ts](src/auth/auth.dto.ts).
 - Service verifies reset token payload, resolves user, hashes the new password, then updates user credentials ([src/auth/auth.services.ts](src/auth/auth.services.ts)).
+
+---
+
+**Auth - Logout**
+
+- **Endpoint:** POST /api/auth/logout
+- **Description:** Logs out the authenticated user by invalidating the active refresh-token session.
+- **Files:** [src/auth/auth.routes.ts](src/auth/auth.routes.ts), [src/auth/auth.controllers.ts](src/auth/auth.controllers.ts), [src/auth/auth.services.ts](src/auth/auth.services.ts), [src/auth/auth.dto.ts](src/auth/auth.dto.ts), [src/midlewares/auth/is-authenticated.midleware.ts](src/midlewares/auth/is-authenticated.midleware.ts)
+
+**Request**
+- **Content-Type:** application/json
+- **Headers:**
+	- **Authorization**: `Bearer <access_token>` (required)
+- **Body schema (intended):**
+	- **refresh_token**: string (required) — valid JWT format
+
+**Responses**
+- **200 OK**: Logout successful
+	- Body: `{ deleteStatus: true }`
+- **400 Bad Request**: Validation error (missing/invalid body shape)
+- **401 Unauthorized**: Missing/invalid access token in `Authorization` header
+- **404 Not Found**:
+	- `invalid session data` when session is missing or already expired
+- **500 Internal Server Error**: Unexpected server error
+
+**Examples**
+
+Request:
+
+```json
+{
+	"refresh_token": "<your_refresh_token>"
+}
+```
+
+Curl example:
+
+```bash
+curl -X POST "http://localhost:3000/api/auth/logout" \
+	-H "Authorization: Bearer <your_access_token>" \
+	-H "Content-Type: application/json" \
+	-d '{"refresh_token":"<your_refresh_token>"}'
+```
+
+Axios example:
+
+```ts
+import axios from "axios";
+
+const response = await axios.post(
+	"http://localhost:3000/api/auth/logout",
+	{ refresh_token: "<your_refresh_token>" },
+	{
+		headers: {
+			Authorization: "Bearer <your_access_token>"
+		}
+	}
+);
+
+console.log(response.data.deleteStatus);
+```
+
+**Implementation notes**
+- Route is protected by `isAuthenticated` middleware ([src/midlewares/auth/is-authenticated.midleware.ts](src/midlewares/auth/is-authenticated.midleware.ts)).
+- Controller forwards `refresh_token` to `userLogoutService`, which finds and deletes the hashed session token ([src/auth/auth.controllers.ts](src/auth/auth.controllers.ts), [src/auth/auth.services.ts](src/auth/auth.services.ts)).
+- `LogoutBodySchema` exists in [src/auth/auth.dto.ts](src/auth/auth.dto.ts) and is the matching DTO for this endpoint.
