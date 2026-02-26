@@ -45,7 +45,7 @@ const resetPasswordController = async (req: Request, res: Response) => {
 
 const userLogoutController = async (req:Request, res:Response)=>{
     const body:LogoutBody = req.body;
-    const result = userLogoutService(body);
+    const result = await userLogoutService(body);
     return res.status(200).json(result);
 }
 
