@@ -1,11 +1,10 @@
 
 
 import { Router } from "express";
-import { loginController, refreshTokenController, registerUserController, sendResetOtpController, userLogoutController, verifyResetOtpController } from "./auth.controllers";
+import { loginController, refreshTokenController, registerUserController, resetPasswordController, sendResetOtpController, userLogoutController, verifyResetOtpController } from "./auth.controllers";
 import { asyncHandler } from "../shared/asyncHandler";
 import validate from "../midlewares/validate.midleware";
-import { RefreshTokenBodySchema, ResetPasswordBodySchema, SendResetPasswordOtpBodySchema, UserLoginBodySchema, UserRegisterBodySchema, VerifyOtpBodySchema } from "./auth.dto";
-import { resetPasswordService } from "./auth.services";
+import { LogoutBodySchema, RefreshTokenBodySchema, ResetPasswordBodySchema, SendResetPasswordOtpBodySchema, UserLoginBodySchema, UserRegisterBodySchema, VerifyOtpBodySchema } from "./auth.dto";
 import isAuthenticated from "../midlewares/auth/is-authenticated.midleware";
 
 
@@ -19,7 +18,7 @@ router.post("/refresh-token", validate(RefreshTokenBodySchema), asyncHandler(ref
 //sending otp code
 router.post("/reset", validate(SendResetPasswordOtpBodySchema), asyncHandler(sendResetOtpController));
 router.post("/reset/verify", validate(VerifyOtpBodySchema), asyncHandler(verifyResetOtpController));
-router.patch("/reset", validate(ResetPasswordBodySchema), asyncHandler(resetPasswordService));
-router.patch("/logout", isAuthenticated, validate(ResetPasswordBodySchema), asyncHandler(userLogoutController));
+router.patch("/reset", validate(ResetPasswordBodySchema), asyncHandler(resetPasswordController));
+router.post("/logout", isAuthenticated, validate(LogoutBodySchema), asyncHandler(userLogoutController));
 
 export default router;
