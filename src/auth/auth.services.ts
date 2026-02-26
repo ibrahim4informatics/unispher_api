@@ -170,6 +170,7 @@ const sendPasswordOtpService = async (user_email: string) => {
     })
     const result = await sendMail({
         sender: '"Unisphere"<appunisphere@gmail.com>',
+        subject:"Account Reset Password Request",
         to: user_email,
         html: generateResetPasswordOtpMail(otp_code, user.first_name)
     });
