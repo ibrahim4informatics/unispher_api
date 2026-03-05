@@ -16,7 +16,6 @@
 	- **role**: enum `STUDENT` | `TEACHER` (default: `STUDENT`)
 
 Notes:
-- For `role: STUDENT` the `student_id` must be provided.
 - For `role: TEACHER` a `student_id` is not allowed.
 
 **Responses**
@@ -470,3 +469,111 @@ console.log(response.data.deleteStatus);
 - Route is protected by `isAuthenticated` middleware ([src/midlewares/auth/is-authenticated.midleware.ts](src/midlewares/auth/is-authenticated.midleware.ts)).
 - Controller forwards `refresh_token` to `userLogoutService`, which finds and deletes the hashed session token ([src/auth/auth.controllers.ts](src/auth/auth.controllers.ts), [src/auth/auth.services.ts](src/auth/auth.services.ts)).
 - `LogoutBodySchema` exists in [src/auth/auth.dto.ts](src/auth/auth.dto.ts) and is the matching DTO for this endpoint.
+
+
+---
+
+**University - Get All Universities**
+
+- **Endpoint:** GET /api/university
+- **Description:** Retrieves a paginated list of all universities with optional filtering and sorting.
+- **Files:** [src/university/university.routes.ts](src/university/university.routes.ts), [src/university/university.controllers.ts](src/university/university.controllers.ts), [src/university/university.services.ts](src/university/university.services.ts)
+
+**Request**
+- **Query Parameters (optional):**
+	- **page**: number (default: 1) — pagination page number
+	- **limit**: number (default: 10) — items per page
+	- **search**: string (optional) — search by university name
+	- **sortBy**: string (optional) — field to sort by (e.g., `name`, `createdAt`)
+	- **order**: `asc` | `desc` (default: `asc`) — sort direction
+
+**Responses**
+- **200 OK**: Universities retrieved successfully
+	- Body: `{ data: University[], total: number, page: number, limit: number }`
+- **400 Bad Request**: Invalid query parameters
+- **500 Internal Server Error**: Unexpected server error
+
+**Examples**
+
+Curl example:
+
+```bash
+curl -X GET "http://localhost:3000/api/university?page=1&limit=10&search=MIT"
+```
+
+Axios example:
+
+```ts
+import axios from "axios";
+
+const response = await axios.get("http://localhost:3000/api/university", {
+	params: { page: 1, limit: 10, search: "MIT" }
+});
+
+console.log(response.data);
+```
+
+---
+
+
+**Department - Get All Departments**
+
+- **Endpoint:** GET /api/departments
+- **Description:** Retrieves a paginated list of all departments with optional filtering.
+- **Files:** [src/departments/department.routes.ts](src/departments/department.routes.ts), [src/departments/department.controllers.ts](src/departments/department.controllers.ts), [src/departments/department.services.ts](src/departments/department.services.ts)
+
+**Request**
+- **Query Parameters (optional):**
+	- **page**: number (default: 1)
+	- **limit**: number (default: 10)
+	- **universityId**: string (optional) — filter by university ID
+	- **search**: string (optional) — search by department name
+
+**Responses**
+- **200 OK**: Departments retrieved successfully
+	- Body: `{ data: Department[], total: number, page: number, limit: number }`
+- **400 Bad Request**: Invalid query parameters
+- **500 Internal Server Error**: Unexpected server error
+
+**Examples**
+
+Curl example:
+
+```bash
+curl -X GET "http://localhost:3000/api/departments?universityId=550e8400-e29b-41d4-a716-446655440000"
+```
+
+Axios example:
+
+```ts
+import axios from "axios";
+
+const response = await axios.get("http://localhost:3000/api/departments", {
+	params: { universityId: "550e8400-e29b-41d4-a716-446655440000" }
+});
+
+console.log(response.data);
+```
+
+---
+
+**Field - Get All Fields**
+
+- **Endpoint:** GET /api/fields
+- **Description:** Retrieves a paginated list of all fields with optional filtering.
+- **Files:** [src/fields/field.routes.ts](src/fields/field.routes.ts), [src/fields/field.controllers.ts](src/fields/field.controllers.ts), [src/fields/field.service.ts](src/fields/field.service.ts)
+
+**Request**
+- **Query Parameters (optional):**
+	- **page**: number (default: 1)
+	- **limit**: number (default: 10)
+	- **departmentId**: string (optional) — filter by department ID
+	- **search**: string (optional) — search by field name
+
+**Responses**
+- **200 OK**: Fields retrieved successfully
+	- Body: `{ data: Field[], total: number, page: number, limit: number }`
+- **400 Bad Request**: Invalid query parameters
+- **500 Internal Server Error**: Unexpected server error
+
+---
