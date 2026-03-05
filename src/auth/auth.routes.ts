@@ -1,10 +1,11 @@
 
 
 import { Router } from "express";
-import { loginController, refreshTokenController, registerUserController, resetPasswordController, sendResetOtpController, userLogoutController, verifyResetOtpController } from "./auth.controllers";
+import { loginController, refreshTokenController, registerUserController, resetPasswordController, sendResetOtpController, uploadIdentityController, userLogoutController, verifyResetOtpController } from "./auth.controllers";
 import { asyncHandler } from "../shared/asyncHandler";
 import validate from "../midlewares/validate.midleware";
 import { LogoutBodySchema, RefreshTokenBodySchema, ResetPasswordBodySchema, SendResetPasswordOtpBodySchema, UserLoginBodySchema, UserRegisterBodySchema, VerifyOtpBodySchema } from "./auth.dto";
+import uploadIdentityCard from "../midlewares/multer/uploadIdentityCard";
 import isAuthenticated from "../midlewares/auth/is-authenticated.midleware";
 
 
@@ -19,6 +20,7 @@ router.post("/refresh-token", validate(RefreshTokenBodySchema), asyncHandler(ref
 router.post("/reset", validate(SendResetPasswordOtpBodySchema), asyncHandler(sendResetOtpController));
 router.post("/reset/verify", validate(VerifyOtpBodySchema), asyncHandler(verifyResetOtpController));
 router.patch("/reset", validate(ResetPasswordBodySchema), asyncHandler(resetPasswordController));
-router.post("/logout", isAuthenticated, validate(LogoutBodySchema), asyncHandler(userLogoutController));
+router.post("/logout", isAuthenticated,validate(LogoutBodySchema), asyncHandler(userLogoutController));
 
+router.post("/upload-identity", uploadIdentityCard.single("file"), asyncHandler(uploadIdentityController));
 export default router;

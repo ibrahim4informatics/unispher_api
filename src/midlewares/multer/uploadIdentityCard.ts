@@ -1,0 +1,11 @@
+import multer from "multer";
+
+
+const storage = multer.memoryStorage();
+
+const uploadIdentityCard = multer({
+    storage,
+    limits: { fileSize: 3 * 1024 * 1024 },
+})
+
+export default uploadIdentityCard;

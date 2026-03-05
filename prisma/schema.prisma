@@ -200,14 +200,14 @@ model CourseEnrollment {
 }
 
 model Session {
-  id         Int      @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   user_id    String
-  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   device     String
-  token      String   @unique
-  is_expired  Boolean  @default(false)
+  token      String    @unique
+  is_expired Boolean   @default(false)
   expires_at DateTime?
-  created_at DateTime @default(now())
+  created_at DateTime  @default(now())
 }
 
 model Otp {
@@ -216,6 +216,7 @@ model Otp {
   user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   code       String
   created_at DateTime @default(now())
+
   @@unique([user_id, code])
 }
 
@@ -233,6 +234,7 @@ model User {
   onboarding_completed Boolean         @default(false)
   sessions             Session[]
   otps                 Otp[]
+  id_card_url          String?
   student_profile      StudentProfile?
   teacher_profile      TeacherProfile?
   admin_profile        AdminProfile?
@@ -267,7 +269,7 @@ model TeacherProfile {
 
   univeristy_id String
   university    University @relation(fields: [univeristy_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  
+
   // students
   user_id           String   @unique
   user              User     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
