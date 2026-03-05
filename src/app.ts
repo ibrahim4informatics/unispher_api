@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import authRouter from "./auth/auth.routes";
+import universityRouter from "./university/university.routes";
 import globalErrorHandler from "./midlewares/error.midleware";
 import cors from "cors";
 import { NotFoundError } from "./shared/errors/NotFoundError";
@@ -15,6 +16,7 @@ app.use(userAgent())
 
 
 app.use("/api/auth", authRouter);
+app.use("/api/university", universityRouter);
 app.use("/api/fields", fieldRouter);
 app.use("/api/departments", departmentsRouter);
 app.get("/api/health", async (req: Request, res: Response) => {
