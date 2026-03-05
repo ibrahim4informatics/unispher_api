@@ -88,6 +88,7 @@ model Faculty {
   university_id String
   university    University   @relation(fields: [university_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   departments   Department[]
+  students      StudentProfile[]
   updated_at    DateTime     @updatedAt
   created_at    DateTime     @default(now())
 }
@@ -255,6 +256,10 @@ model StudentProfile {
   user              User               @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   department_id     Int
   department        Department         @relation(fields: [department_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  faculty_id        Int
+  faculty           Faculty            @relation(fields: [faculty_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  created_at        DateTime           @default(now())
   updated_at        DateTime           @updatedAt
   courseEnrollments CourseEnrollment[]
 }
