@@ -9,6 +9,7 @@ import { generateAccessToken, generateOtpVerifiedToken, generateRefreshToken, ge
 import { sendMail } from "../shared/services/nodemailer.service";
 import otpGenerator from "otp-generator";
 import { NotFoundError } from "../shared/errors/NotFoundError";
+import { uploadToCloudinary } from "../shared/services/cloudinary.service";
 
 
 
@@ -78,7 +79,8 @@ const registerUserService = async (data: UserRegisterBody): Promise<Omit<User, "
     }
     else {
         const student = await db.user.findFirst({ where: { OR: [{ student_id }, { email }] } });
-        if (student) throw new BadRequestError("Student with this credentials already exist");
+        if (student && student.email === email) throw new BadRequestError("the email is taken");
+        else if (student && student.student_id === student_id) throw new BadRequestError("the student exist");
         const { avatar_url, password, ...newStudent } = await db.user.create({ data: { email, first_name, last_name, role, bio, password: hashPassword, student_id } });
         return newStudent;
     }
@@ -170,7 +172,7 @@ const sendPasswordOtpService = async (user_email: string) => {
     })
     const result = await sendMail({
         sender: '"Unisphere"<appunisphere@gmail.com>',
-        subject:"Account Reset Password Request",
+        subject: "Account Reset Password Request",
         to: user_email,
         html: generateResetPasswordOtpMail(otp_code, user.first_name)
     });
@@ -237,6 +239,16 @@ const userLogoutService = async (logoutBody: LogoutBody) => {
     return { deleteStatus, message: "user logout success!" }
 }
 
+const uploadIdentityService = async (user_id: string, file?: Express.Multer.File) => {
+
+    if (!file) throw new BadRequestError("No file uploaded");
+    if(!file.mimetype.startsWith("image/")) throw new BadRequestError("Invalid file type only images allowed");
+    if (!user_id) throw new BadRequestError("user id is required");
+    const user = await db.user.findUnique({ where: { id: user_id } });
+    if (!user) throw new BadRequestError("invalid user id");
+    const fileUrl = await uploadToCloudinary(file, "unispher_id_cards");
+    await db.user.update({ where: { id: user_id }, data: { id_card_url: fileUrl } });
+}
 
 export {
     registerUserService,
@@ -245,5 +257,6 @@ export {
     sendPasswordOtpService,
     resetPasswordVeirfyOtpService,
     resetPasswordService,
+    uploadIdentityService,
     userLogoutService
 }

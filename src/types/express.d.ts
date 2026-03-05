@@ -1,9 +1,12 @@
-import { UserAuthPayload } from "../auth/auth.types";
+ 
+// or whatever your payload type is
 
-declare module "express-serve-static-core" {
+declare global {
+  namespace Express {
     interface Request {
-        user?: UserAuthPayload;
+      user?: any; // 👈 your custom type
     }
+  }
 }
 
 export {};

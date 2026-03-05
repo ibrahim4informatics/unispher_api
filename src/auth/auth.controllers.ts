@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { LogoutBody, RefreshTokenBody, ResetPasswordBody, SendResetPasswordOtpBody, UserLoginBody, VerifyOtpBody, type UserRegisterBody } from "./auth.dto";
-import { loginUserService, refreshTokenService, registerUserService, resetPasswordService, resetPasswordVeirfyOtpService, sendPasswordOtpService, userLogoutService } from "./auth.services";
+import { loginUserService, refreshTokenService, registerUserService, resetPasswordService, resetPasswordVeirfyOtpService, sendPasswordOtpService, uploadIdentityService, userLogoutService } from "./auth.services";
 
 const registerUserController = async (request: Request, res: Response) => {
     const body: UserRegisterBody = request.body;
@@ -43,10 +43,19 @@ const resetPasswordController = async (req: Request, res: Response) => {
     return res.status(200).json({ password_changed })
 }
 
-const userLogoutController = async (req:Request, res:Response)=>{
-    const body:LogoutBody = req.body;
+const userLogoutController = async (req: Request, res: Response) => {
+    const body: LogoutBody = req.body;
     const result = await userLogoutService(body);
     return res.status(200).json(result);
+}
+
+const uploadIdentityController = async (req: Request, res: Response) => {
+
+    const file = req.file;
+    const user_id = req.body.user_id;
+    await uploadIdentityService(user_id, file);
+    return res.status(200).json({ message: "ID Card uploaded successfully" });
+
 }
 
 
@@ -58,5 +67,6 @@ export {
     sendResetOtpController,
     verifyResetOtpController,
     resetPasswordController,
-    userLogoutController
+    userLogoutController,
+    uploadIdentityController
 }
