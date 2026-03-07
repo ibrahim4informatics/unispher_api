@@ -577,3 +577,61 @@ console.log(response.data);
 - **500 Internal Server Error**: Unexpected server error
 
 ---
+
+**User - Upload User Avatar (Initial)**
+
+- **Endpoint:** POST /api/user/avatar
+- **Description:** Upload a profile picture for a user (initial setup, no authentication required).
+- **Files:** [src/user/user.routes.ts](src/user/user.routes.ts), [src/user/user.controller.ts](src/user/user.controller.ts), [src/user/user.service.ts](src/user/user.service.ts)
+
+**Request**
+- **Content-Type:** multipart/form-data
+- **Body:**
+	- **user_id**: string (required) — UUID of the user
+	- **picture**: file (required) — image file for profile picture
+
+**Responses**
+- **200 OK**: Profile picture uploaded successfully
+	- Body: `{ message: "Profile picture uploaded successfully" }`
+- **400 Bad Request**:
+	- `Profile picture is required` when file is missing
+- **404 Not Found**:
+	- `User not found` when user_id is invalid or doesn't exist
+- **500 Internal Server Error**: Unexpected server error (e.g., Cloudinary upload failure)
+
+**Examples**
+
+Curl example:
+
+```bash
+curl -X POST "http://localhost:3000/api/user/avatar" \
+	-H "Authorization: Bearer <your_access_token>" \
+	-F "user_id=0f2a3473-6a59-4f01-8c81-bf75644f1aa2" \
+	-F "picture=@/path/to/profile.jpg"
+```
+
+Axios example:
+
+```ts
+import axios from "axios";
+
+const formData = new FormData();
+formData.append("user_id", "0f2a3473-6a59-4f01-8c81-bf75644f1aa2");
+formData.append("picture", imageFile); // File object from input
+
+const response = await axios.post(
+	"http://localhost:3000/api/user/avatar",
+	formData,
+	{
+		headers: {
+			"Content-Type": "multipart/form-data",
+			Authorization: "Bearer <your_access_token>"
+		}
+	}
+);
+
+console.log(response.data.message);
+```
+
+**Implementation notes**
+- Multipart form parsing is handled by middleware (multer or similar).

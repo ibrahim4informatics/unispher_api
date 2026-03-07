@@ -11,6 +11,7 @@ import facultyRouter from "./faculty/faculty.routes";
 import levelsRouter from "./levels/levels.routes";
 import studentRouter from "./student/student.routes";
 import userRouter from "./user/user.routes";
+import teacherRouter from "./teacher/teacher.routes";
 const app = express();
 
 
@@ -28,6 +29,7 @@ app.use("/api/faculty", facultyRouter);
 app.use("/api/levels", levelsRouter);
 app.use("/api/user", userRouter);
 app.use("/api/student", studentRouter);
+app.use("/api/teacher", teacherRouter);
 app.get("/api/health", async (req: Request, res: Response) => {
     throw new NotFoundError("This route does not exist");
 });

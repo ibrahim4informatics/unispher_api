@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { AppError } from "../shared/errors/AppError";
 
 export default (err: any, req: Request, res: Response, next: NextFunction) => {
+    console.log(err)
     if (err instanceof AppError) {
         return res.status(err.statusCode).json({
             success: false,
