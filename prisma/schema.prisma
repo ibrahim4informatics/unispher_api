@@ -26,6 +26,7 @@ enum FileTypes {
   WORD
   PPT
   TXT
+  OTHER
 }
 
 enum UserRoles {
@@ -66,6 +67,8 @@ enum AcademicTitle {
 enum PostType {
   FEED
   FORUM
+  QUESTION
+  RESOURCE
   ANNOUNCEMENT
 }
 
@@ -329,16 +332,17 @@ model Permission {
 }
 
 model Post {
-  id         Int        @id @default(autoincrement())
+  id         Int         @id @default(autoincrement())
   content    String
   author_id  String
-  type       PostType   @default(FEED)
+  type       PostType    @default(FEED)
   comments   Comment[]
   likes      Like[]
   booksmarks Bookmark[]
-  author     User       @relation(fields: [author_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  updated_at DateTime   @updatedAt
-  created_at DateTime   @default(now())
+  author     User        @relation(fields: [author_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  updated_at DateTime    @updatedAt
+  created_at DateTime    @default(now())
+  postMedias PostMedia[]
 }
 
 model Comment {
@@ -363,6 +367,7 @@ model Like {
 
   @@unique([user_id, post_id])
 }
+
 model Bookmark {
   id         Int      @id @default(autoincrement())
   user_id    String
@@ -375,4 +380,12 @@ model Bookmark {
   @@unique([user_id, post_id])
 }
 
-
+model PostMedia {
+  id         Int       @id @default(autoincrement())
+  post_id    Int
+  type       FileTypes
+  url        String
+  post       Post      @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  updated_at DateTime  @updatedAt
+  created_at DateTime  @default(now())
+}
