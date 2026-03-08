@@ -1,5 +1,8 @@
 import db from "../config/db";
-import { uploadToCloudinary } from "../shared/services/cloudinary.service";
+import { BadRequestError } from "../shared/errors/BadRequestError";
+import { ForbiddenError } from "../shared/errors/ForbidenError";
+import { NotFoundError } from "../shared/errors/NotFoundError";
+import { deleteFromCloudinary, getPublicId, uploadToCloudinary } from "../shared/services/cloudinary.service";
 import { type CreatePostDto } from "./posts.dtos";
 
 
@@ -51,7 +54,46 @@ const createPostService = async (author_id: string, data: CreatePostDto, file: E
 }
 
 
+const deletePostBydIdService = async (user_id?: string, post_id?: number) => {
+    if (!post_id || !user_id) throw new BadRequestError("Can not delete post")
+    const post = await db.post.findUnique({ where: { id: post_id }, include: { postMedias: true } });
+    if (!post) throw new NotFoundError("Post can not be found");
+    if (post.author_id !== user_id) throw new ForbiddenError("Post can not be deleted")
+
+    if (post.postMedias.length > 0) {
+
+        const deleteMediasPromises = post.postMedias.map(m => {
+            const public_id = getPublicId(m.url);
+            return deleteFromCloudinary(public_id);
+        })
+        await Promise.all(deleteMediasPromises);
+    }
+    await db.post.delete({
+        where: {
+            id: post_id
+        }
+    })
+}
+
+
+// const getPostsService = () => { }
+
+const getPostByIdService = async (post_id: number) => {
+
+    const post = await db.post.findUnique({
+        where: { id: post_id }, include: {
+            postMedias: true,
+            author: true,
+        }
+    });
+
+    if (!post) throw new NotFoundError("post can not be found");
+    return post;
+
+}
 
 
 
-export { createPostService };
+
+
+export { createPostService, deletePostBydIdService , getPostByIdService};
