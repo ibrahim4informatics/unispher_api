@@ -635,3 +635,386 @@ console.log(response.data.message);
 
 **Implementation notes**
 - Multipart form parsing is handled by middleware (multer or similar).
+
+---
+
+**Posts - Create Post**
+
+- **Endpoint:** POST /api/posts
+- **Description:** Create a new post with optional media attachments.
+- **Files:** [src/posts/posts.routes.ts](src/posts/posts.routes.ts), [src/posts/posts.controller.ts](src/posts/posts.controller.ts), [src/posts/posts.service.ts](src/posts/posts.service.ts), [src/posts/posts.dtos.ts](src/posts/posts.dtos.ts), [src/midlewares/multer/uploadPostMedias.ts](src/midlewares/multer/uploadPostMedias.ts)
+
+**Request**
+- **Content-Type:** multipart/form-data
+- **Headers:**
+	- **Authorization**: `Bearer <access_token>` (required)
+- **Body fields:**
+	- **content**: string (required) — minimum 10 characters
+	- **type**: enum (required) — `FEED` | `FORUM` | `QUESTION` | `RESOURCE` | `ANNOUNCEMENT`
+	- **medias**: file[] (optional) — multiple files, max 5 MB per file
+
+**Responses**
+- **201 Created**: Post created successfully
+	- Body: `{ message: "Post created successfully" }`
+- **400 Bad Request**:
+	- Validation error (missing/invalid `content` or `type`)
+	- Body shape from validation middleware: `{ errors: ... }`
+- **401 Unauthorized**:
+	- `authentification is required` when token is missing/invalid
+- **500 Internal Server Error**: Unexpected server error
+
+**Examples**
+
+Curl example:
+
+```bash
+curl -X POST "http://localhost:3000/api/posts" \
+	-H "Authorization: Bearer <your_access_token>" \
+	-F "content=This is a sample post content with more than ten characters" \
+	-F "type=FEED" \
+	-F "medias=@/path/to/image1.jpg" \
+	-F "medias=@/path/to/video1.mp4"
+```
+
+Axios example:
+
+```ts
+import axios from "axios";
+
+const formData = new FormData();
+formData.append("content", "This is a sample post content with more than ten characters");
+formData.append("type", "FEED");
+formData.append("medias", imageFile1);
+formData.append("medias", videoFile1);
+
+const response = await axios.post("http://localhost:3000/api/posts", formData, {
+	headers: {
+		Authorization: "Bearer <your_access_token>",
+		"Content-Type": "multipart/form-data"
+	}
+});
+
+console.log(response.data.message);
+```
+
+**Implementation notes**
+- Auth is enforced by `isAuthenticated` middleware.
+- Uploaded files are stored in memory by multer and then uploaded to Cloudinary.
+- Attachment type is inferred from file extension and saved as `IMAGE`, `VIDEO`, or `OTHER`.
+
+---
+
+**Posts - Get Post By ID**
+
+- **Endpoint:** GET /api/posts/:post_id
+- **Description:** Retrieve a single post by id, including author and media attachments.
+- **Files:** [src/posts/posts.routes.ts](src/posts/posts.routes.ts), [src/posts/posts.controller.ts](src/posts/posts.controller.ts), [src/posts/posts.service.ts](src/posts/posts.service.ts)
+
+**Request**
+- **Headers:**
+	- **Authorization**: `Bearer <access_token>` (required)
+- **Path Parameters:**
+	- **post_id**: number (required)
+
+**Responses**
+- **200 OK**: Post retrieved successfully
+	- Body: `{ post: { ...post, author: User, postMedias: PostMedia[] } }`
+- **401 Unauthorized**:
+	- `authentification is required` when token is missing/invalid
+- **404 Not Found**:
+	- `post can not be found`
+- **500 Internal Server Error**: Unexpected server error
+
+**Examples**
+
+Curl example:
+
+```bash
+curl -X GET "http://localhost:3000/api/posts/12" \
+	-H "Authorization: Bearer <your_access_token>"
+```
+
+Axios example:
+
+```ts
+import axios from "axios";
+
+const response = await axios.get("http://localhost:3000/api/posts/12", {
+	headers: {
+		Authorization: "Bearer <your_access_token>"
+	}
+});
+
+console.log(response.data.post);
+```
+
+**Implementation notes**
+- The service fetches post data with both `author` and `postMedias` relations included.
+
+---
+
+**Posts - Delete Post**
+
+- **Endpoint:** DELETE /api/posts/:post_id
+- **Description:** Delete a post owned by the authenticated user, including attached media cleanup.
+- **Files:** [src/posts/posts.routes.ts](src/posts/posts.routes.ts), [src/posts/posts.controller.ts](src/posts/posts.controller.ts), [src/posts/posts.service.ts](src/posts/posts.service.ts)
+
+**Request**
+- **Headers:**
+	- **Authorization**: `Bearer <access_token>` (required)
+- **Path Parameters:**
+	- **post_id**: number (required)
+
+**Responses**
+- **200 OK**: Post deleted successfully
+	- Body: `{ message: "Post deleted successfully" }`
+- **400 Bad Request**:
+	- `Can not delete post` when `post_id` is invalid
+- **401 Unauthorized**:
+	- `authentification is required` when token is missing/invalid
+- **403 Forbidden**:
+	- `Post can not be deleted` when user is not the post author
+- **404 Not Found**:
+	- `Post can not be found`
+- **500 Internal Server Error**: Unexpected server error
+
+**Examples**
+
+Curl example:
+
+```bash
+curl -X DELETE "http://localhost:3000/api/posts/12" \
+	-H "Authorization: Bearer <your_access_token>"
+```
+
+Axios example:
+
+```ts
+import axios from "axios";
+
+const response = await axios.delete("http://localhost:3000/api/posts/12", {
+	headers: {
+		Authorization: "Bearer <your_access_token>"
+	}
+});
+
+console.log(response.data.message);
+```
+
+**Implementation notes**
+- Only the post author can delete the post.
+
+
+**Comments - Create Comment**
+
+- **Endpoint:** POST /api/comments
+- **Description:** Create a new comment on a post. Validation is performed by `CreateCommentBodySchema`.
+- **Files:** [src/comments/comment.routes.ts](src/comments/comment.routes.ts), [src/comments/comment.controller.ts](src/comments/comment.controller.ts), [src/comments/comment.service.ts](src/comments/comment.service.ts), [src/comments/comments.dto.ts](src/comments/comments.dto.ts)
+
+**Request**
+- **Content-Type:** application/json
+- **Headers:**
+	- **Authorization**: `Bearer <access_token>` (required)
+- **Body schema:**
+	- **post_id**: number (required) — ID of the post to comment on
+	- **content**: string (required) — minimum 1 character
+
+**Responses**
+- **201 Created**: Comment created successfully
+	- Body: `{ message: "Comment created successfully", comment: Comment }`
+- **400 Bad Request**: Validation error (missing/invalid `post_id` or `content`)
+- **401 Unauthorized**:
+	- `authentification is required` when token is missing/invalid
+- **404 Not Found**:
+	- `Post not found` when post_id doesn't exist
+- **500 Internal Server Error**: Unexpected server error
+
+**Examples**
+
+Curl example:
+
+```bash
+curl -X POST "http://localhost:3000/api/comments" \
+	-H "Authorization: Bearer <your_access_token>" \
+	-H "Content-Type: application/json" \
+	-d '{"post_id":12,"content":"Great post!"}'
+```
+
+Axios example:
+
+```ts
+import axios from "axios";
+
+const response = await axios.post(
+	"http://localhost:3000/api/comments",
+	{ post_id: 12, content: "Great post!" },
+	{ headers: { Authorization: "Bearer <your_access_token>" } }
+);
+
+console.log(response.data.comment);
+```
+
+**Implementation notes**
+- Request validation is handled by `CreateCommentBodySchema` in [src/comments/comments.dto.ts](src/comments/comments.dto.ts).
+- Auth is enforced by `isAuthenticated` middleware.
+- The service creates the comment linked to the authenticated user and specified post ([src/comments/comment.service.ts](src/comments/comment.service.ts)).
+
+---
+
+**Comments - Get Comments By Post**
+
+- **Endpoint:** GET /api/comments/:post_id
+- **Description:** Retrieve all comments for a specific post with pagination.
+- **Files:** [src/comments/comment.routes.ts](src/comments/comment.routes.ts), [src/comments/comment.controller.ts](src/comments/comment.controller.ts), [src/comments/comment.service.ts](src/comments/comment.service.ts)
+
+**Request**
+- **Headers:**
+	- **Authorization**: `Bearer <access_token>` (required)
+- **Path Parameters:**
+	- **post_id**: number (required)
+- **Query Parameters (optional):**
+	- **page**: number (default: 1) — pagination page number
+	- **limit**: number (default: 10) — items per page
+
+**Responses**
+- **200 OK**: Comments retrieved successfully
+	- Body: `{ data: Comment[], total: number, page: number, limit: number }`
+- **401 Unauthorized**:
+	- `authentification is required` when token is missing/invalid
+- **404 Not Found**:
+	- `Post not found`
+- **500 Internal Server Error**: Unexpected server error
+
+**Examples**
+
+Curl example:
+
+```bash
+curl -X GET "http://localhost:3000/api/comments/12?page=1&limit=5" \
+	-H "Authorization: Bearer <your_access_token>"
+```
+
+Axios example:
+
+```ts
+import axios from "axios";
+
+const response = await axios.get("http://localhost:3000/api/comments/12", {
+	params: { page: 1, limit: 5 },
+	headers: { Authorization: "Bearer <your_access_token>" }
+});
+
+console.log(response.data);
+```
+
+**Implementation notes**
+- The service fetches paginated comments for the post with author details ([src/comments/comment.service.ts](src/comments/comment.service.ts)).
+
+---
+
+**Comments - Update Comment**
+
+- **Endpoint:** PATCH /api/comments/:comment_id
+- **Description:** Update a comment owned by the authenticated user.
+- **Files:** [src/comments/comment.routes.ts](src/comments/comment.routes.ts), [src/comments/comment.controller.ts](src/comments/comment.controller.ts), [src/comments/comment.service.ts](src/comments/comment.service.ts), [src/comments/comments.dto.ts](src/comments/comments.dto.ts)
+
+**Request**
+- **Content-Type:** application/json
+- **Headers:**
+	- **Authorization**: `Bearer <access_token>` (required)
+- **Path Parameters:**
+	- **comment_id**: number (required)
+- **Body schema:**
+	- **content**: string (required) — minimum 1 character
+
+**Responses**
+- **200 OK**: Comment updated successfully
+	- Body: `{ message: "Comment updated successfully", comment: Comment }`
+- **400 Bad Request**: Validation error (missing/invalid `content`)
+- **401 Unauthorized**:
+	- `authentification is required` when token is missing/invalid
+- **403 Forbidden**:
+	- `Comment can not be updated` when user is not the comment author
+- **404 Not Found**:
+	- `Comment not found`
+- **500 Internal Server Error**: Unexpected server error
+
+**Examples**
+
+Curl example:
+
+```bash
+curl -X PATCH "http://localhost:3000/api/comments/5" \
+	-H "Authorization: Bearer <your_access_token>" \
+	-H "Content-Type: application/json" \
+	-d '{"content":"Updated comment text"}'
+```
+
+Axios example:
+
+```ts
+import axios from "axios";
+
+const response = await axios.patch(
+	"http://localhost:3000/api/comments/5",
+	{ content: "Updated comment text" },
+	{ headers: { Authorization: "Bearer <your_access_token>" } }
+);
+
+console.log(response.data.comment);
+```
+
+**Implementation notes**
+- Request validation is handled by `UpdateCommentBodySchema` in [src/comments/comments.dto.ts](src/comments/comments.dto.ts).
+- Only the comment author can update the comment ([src/comments/comment.service.ts](src/comments/comment.service.ts)).
+
+---
+
+**Comments - Delete Comment**
+
+- **Endpoint:** DELETE /api/comments/:comment_id
+- **Description:** Delete a comment owned by the authenticated user.
+- **Files:** [src/comments/comment.routes.ts](src/comments/comment.routes.ts), [src/comments/comment.controller.ts](src/comments/comment.controller.ts), [src/comments/comment.service.ts](src/comments/comment.service.ts)
+
+**Request**
+- **Headers:**
+	- **Authorization**: `Bearer <access_token>` (required)
+- **Path Parameters:**
+	- **comment_id**: number (required)
+
+**Responses**
+- **200 OK**: Comment deleted successfully
+	- Body: `{ message: "Comment deleted successfully" }`
+- **400 Bad Request**:
+	- `Can not delete comment` when `comment_id` is invalid
+- **401 Unauthorized**:
+	- `authentification is required` when token is missing/invalid
+- **403 Forbidden**:
+	- `Comment can not be deleted` when user is not the comment author
+- **404 Not Found**:
+	- `Comment not found`
+- **500 Internal Server Error**: Unexpected server error
+
+**Examples**
+
+Curl example:
+
+```bash
+curl -X DELETE "http://localhost:3000/api/comments/5" \
+	-H "Authorization: Bearer <your_access_token>"
+```
+
+Axios example:
+
+```ts
+import axios from "axios";
+
+const response = await axios.delete("http://localhost:3000/api/comments/5", {
+	headers: { Authorization: "Bearer <your_access_token>" }
+});
+
+console.log(response.data.message);
+```
+
+**Implementation notes**
+- Only the comment author can delete the comment ([src/comments/comment.service.ts](src/comments/comment.service.ts)).
