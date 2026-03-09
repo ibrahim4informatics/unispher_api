@@ -3,7 +3,7 @@ import { BadRequestError } from "../shared/errors/BadRequestError";
 import { ForbiddenError } from "../shared/errors/ForbidenError";
 import { NotFoundError } from "../shared/errors/NotFoundError";
 import { deleteFromCloudinary, getPublicId, uploadToCloudinary } from "../shared/services/cloudinary.service";
-import { type CreatePostDto } from "./posts.dtos";
+import { GetPostsQueryDto, type CreatePostDto } from "./posts.dtos";
 
 
 const createPostService = async (author_id: string, data: CreatePostDto, file: Express.Multer.File[]) => {
@@ -75,8 +75,36 @@ const deletePostBydIdService = async (user_id?: string, post_id?: number) => {
     })
 }
 
+// get posts based on user
+const getPostsService = async (query: GetPostsQueryDto) => {
 
-// const getPostsService = () => { }
+    const page = query.page || 1;
+
+    const posts = await db.post.findMany({
+        take: 20,
+        skip: (page - 1) * 20,
+
+        orderBy: {
+            created_at: "desc"
+        },
+        include: {
+            postMedias: true,
+            author: true,
+            _count: {
+                select: {
+                    comments: true,
+                    likes: true,
+                    booksmarks: true
+                }
+            }
+        }
+    }
+    );
+
+    return posts;
+
+
+}
 
 const getPostByIdService = async (post_id: number) => {
 
@@ -91,9 +119,4 @@ const getPostByIdService = async (post_id: number) => {
     return post;
 
 }
-
-
-
-
-
-export { createPostService, deletePostBydIdService , getPostByIdService};
+export { createPostService, deletePostBydIdService, getPostByIdService, getPostsService };

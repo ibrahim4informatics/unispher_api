@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import { createPostService, deletePostBydIdService, getPostByIdService } from "./posts.service";
+import { createPostService, deletePostBydIdService, getPostByIdService, getPostsService } from "./posts.service";
+import { GetPostsQueryDto } from "./posts.dtos";
 
 
 export const createPostController = async (req: Request, res: Response) => {
@@ -15,6 +16,12 @@ export const deletePostController = async (req: Request, res: Response) => {
     const post_id = req.params.post_id
     await deletePostBydIdService(user_id, parseInt(post_id as string));
     return res.status(200).json({ message: "Post deleted successfully" })
+}
+
+export const getPostsController = async (req: Request, res: Response) => {
+    const query: GetPostsQueryDto = req.query;
+    const posts = await getPostsService(query);
+    return res.status(200).json({ posts });
 }
 
 export const getPostByIdController = async (req: Request, res: Response) => {

@@ -7,3 +7,11 @@ export const CreatePostDto = z.object({
 
 
 export type CreatePostDto = z.infer<typeof CreatePostDto>;
+
+
+export const GetPostsQueryDto = z.object({
+    page: z.string().refine(val => val === "" ? undefined : val).regex(/\d+/).transform(val => parseInt(val)).optional()
+});
+
+
+export type GetPostsQueryDto = z.infer<typeof GetPostsQueryDto>
