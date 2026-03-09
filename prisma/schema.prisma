@@ -72,6 +72,11 @@ enum PostType {
   ANNOUNCEMENT
 }
 
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+}
+
 model University {
   id              String           @id @default(uuid())
   name            String
@@ -257,6 +262,8 @@ model User {
   comments             Comment[]
   likes                Like[]
   bookmarks            Bookmark[]
+  connections_received Connection[]    @relation("receivedConnections")
+  connections_sent     Connection[]    @relation("sentConnections")
 }
 
 model StudentProfile {
@@ -388,4 +395,16 @@ model PostMedia {
   post       Post      @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   updated_at DateTime  @updatedAt
   created_at DateTime  @default(now())
+}
+
+model Connection {
+  id          Int              @id @default(autoincrement())
+  sender_id   String
+  receiver_id String
+  status      ConnectionStatus @default(PENDING) // PENDING, ACCEPTED, REJECTED
+  sender      User             @relation("sentConnections", fields: [sender_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  receiver    User             @relation("receivedConnections", fields: [receiver_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  updated_at  DateTime         @updatedAt
+  created_at  DateTime         @default(now())
+  @@unique([sender_id, receiver_id])
 }
