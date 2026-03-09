@@ -13,6 +13,7 @@ import studentRouter from "./student/student.routes";
 import userRouter from "./user/user.routes";
 import teacherRouter from "./teacher/teacher.routes";
 import postsRouter from "./posts/posts.routes";
+import likesRouter from "./likes/likes.routes"
 const app = express();
 
 
@@ -32,6 +33,8 @@ app.use("/api/user", userRouter);
 app.use("/api/student", studentRouter);
 app.use("/api/teacher", teacherRouter);
 app.use("/api/posts", postsRouter);
+app.use("/api/likes", likesRouter)
+
 app.get("/api/health", async (req: Request, res: Response) => {
     throw new NotFoundError("This route does not exist");
 });
