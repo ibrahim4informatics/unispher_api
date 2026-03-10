@@ -35,7 +35,7 @@ export const sendConnectionRequestService = async (data: SendConnectionRequestDt
 export const acceptConnectionRequestService = async (connection_id: number, receiver_id: string) => {
 
     const connection = await db.connection.findUnique({ where: { id: connection_id } });
-    if (!connection) throw new NotFoundError("Connection request can not be found");
+    if (!connection || connection.status !== "PENDING") throw new NotFoundError("Connection request can not be found");
     if (connection.receiver_id !== receiver_id) throw new BadRequestError("Can not accept this connection request");
 
     await db.connection.update({
@@ -51,7 +51,7 @@ export const acceptConnectionRequestService = async (connection_id: number, rece
 export const rejectConnectionRequestService = async (connection_id: number, receiver_id: string) => {
 
     const connection = await db.connection.findUnique({ where: { id: connection_id } });
-    if (!connection) throw new NotFoundError("Connection request can not be found");
+    if (!connection || connection.status !== "PENDING") throw new NotFoundError("Connection request can not be found");
     if (connection.receiver_id !== receiver_id) throw new BadRequestError("Can not reject this connection request");
 
     await db.connection.delete({ where: { id: connection_id } });
@@ -103,5 +103,16 @@ export const getUserConnectionRequestsService = async (user_id: string, query: G
     });
 
     return connectionRequests.map(c => ({ ...c.sender, connection_id: c.id }));
+
+}
+
+
+export const deleteConnectionService = async (connection_id: number, user_id: string) => {
+
+    const connection = await db.connection.findUnique({ where: { id: connection_id } });
+    if (!connection || connection.status !== "ACCEPTED") throw new NotFoundError("Connection can not be found");
+    if (connection.sender_id !== user_id && connection.receiver_id !== user_id) throw new BadRequestError("Can not delete this connection");
+
+    await db.connection.delete({ where: { id: connection_id } });
 
 }

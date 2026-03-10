@@ -1,5 +1,5 @@
 import { Request, Response } from "express"
-import { acceptConnectionRequestService, getUserConnectionRequestsService, getUserConnectionsService, rejectConnectionRequestService, sendConnectionRequestService } from "./connections.service";
+import { acceptConnectionRequestService, deleteConnectionService, getUserConnectionRequestsService, getUserConnectionsService, rejectConnectionRequestService, sendConnectionRequestService } from "./connections.service";
 import { SendConnectionRequestDto } from "./connections.dto";
 
 export const getConncetionsController = async (req: Request, res: Response) => {
@@ -42,5 +42,15 @@ export const rejectConnectionRequestController = async (req: Request, res: Respo
     const connection_id = parseInt(req.params.connection_id as string);
     await rejectConnectionRequestService(connection_id, receiver_id);
     return res.status(200).json({ message: "Connection request rejected" });
+
+}
+
+
+export const  deleteConnectionController = async (req: Request, res: Response) => {
+
+    const user_id = req.user.id;
+    const connection_id = parseInt(req.params.connection_id as string);
+    await deleteConnectionService(connection_id, user_id);
+    return res.status(200).json({ message: "Connection deleted" });
 
 }
