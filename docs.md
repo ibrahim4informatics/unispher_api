@@ -1017,4 +1017,308 @@ console.log(response.data.message);
 ```
 
 **Implementation notes**
-- Only the comment author can delete the comment ([src/comments/comment.service.ts](src/comments/comment.service.ts)).
+
+
+
+**Connections - Send Connection Request**
+
+- **Endpoint:** POST /api/connections/request
+- **Description:** Send a connection request to another user. Validation is performed by `SendConnectionRequestBodySchema`.
+- **Files:** [src/connections/connections.routes.ts](src/connections/connections.routes.ts), [src/connections/connections.controller.ts](src/connections/connections.controller.ts), [src/connections/connections.service.ts](src/connections/connections.service.ts), [src/connections/connections.dto.ts](src/connections/connections.dto.ts)
+
+**Request**
+- **Content-Type:** application/json
+- **Headers:**
+	- **Authorization**: `Bearer <access_token>` (required)
+- **Body schema:**
+	- **receiver_id**: string (required) — UUID of the user to connect with
+
+**Responses**
+- **201 Created**: Connection request sent successfully
+	- Body: `{ message: "Connection request sent", request: ConnectionRequest }`
+- **400 Bad Request**:
+	- Validation error (invalid `receiver_id` format)
+	- `Cannot send request to yourself` when sender and receiver are the same
+	- `Connection request already exists` when request was already sent
+- **401 Unauthorized**:
+	- `authentification is required` when token is missing/invalid
+- **404 Not Found**:
+	- `User not found` when receiver_id doesn't exist
+- **500 Internal Server Error**: Unexpected server error
+
+**Examples**
+
+Curl example:
+
+```bash
+curl -X POST "http://localhost:3000/api/connections/request" \
+	-H "Authorization: Bearer <your_access_token>" \
+	-H "Content-Type: application/json" \
+	-d '{"receiver_id":"550e8400-e29b-41d4-a716-446655440000"}'
+```
+
+Axios example:
+
+```ts
+import axios from "axios";
+
+const response = await axios.post(
+	"http://localhost:3000/api/connections/request",
+	{ receiver_id: "550e8400-e29b-41d4-a716-446655440000" },
+	{ headers: { Authorization: "Bearer <your_access_token>" } }
+);
+
+console.log(response.data.request);
+```
+
+**Implementation notes**
+- Request validation is handled by `SendConnectionRequestBodySchema` in [src/connections/connections.dto.ts](src/connections/connections.dto.ts).
+- Auth is enforced by `isAuthenticated` middleware.
+- The service creates a connection request record linked to the authenticated user as sender ([src/connections/connections.service.ts](src/connections/connections.service.ts)).
+
+---
+
+**Connections - Accept Connection Request**
+
+- **Endpoint:** PATCH /api/connections/request/:request_id/accept
+- **Description:** Accept a pending connection request from another user.
+- **Files:** [src/connections/connections.routes.ts](src/connections/connections.routes.ts), [src/connections/connections.controller.ts](src/connections/connections.controller.ts), [src/connections/connections.service.ts](src/connections/connections.service.ts)
+
+**Request**
+- **Headers:**
+	- **Authorization**: `Bearer <access_token>` (required)
+- **Path Parameters:**
+	- **request_id**: string (required) — UUID of the connection request
+
+**Responses**
+- **200 OK**: Connection request accepted successfully
+	- Body: `{ message: "Connection request accepted", connection: Connection }`
+- **401 Unauthorized**:
+	- `authentification is required` when token is missing/invalid
+- **403 Forbidden**:
+	- `Connection request can not be accepted` when user is not the receiver
+- **404 Not Found**:
+	- `Connection request not found`
+- **500 Internal Server Error**: Unexpected server error
+
+**Examples**
+
+Curl example:
+
+```bash
+curl -X PATCH "http://localhost:3000/api/connections/request/550e8400-e29b-41d4-a716-446655440000/accept" \
+	-H "Authorization: Bearer <your_access_token>"
+```
+
+Axios example:
+
+```ts
+import axios from "axios";
+
+const response = await axios.patch(
+	"http://localhost:3000/api/connections/request/550e8400-e29b-41d4-a716-446655440000/accept",
+	{},
+	{ headers: { Authorization: "Bearer <your_access_token>" } }
+);
+
+console.log(response.data.connection);
+```
+
+**Implementation notes**
+- Only the request receiver can accept the connection request.
+- The service updates the request status and creates a connection record ([src/connections/connections.service.ts](src/connections/connections.service.ts)).
+
+---
+
+**Connections - Reject Connection Request**
+
+- **Endpoint:** PATCH /api/connections/request/:request_id/reject
+- **Description:** Reject a pending connection request from another user.
+- **Files:** [src/connections/connections.routes.ts](src/connections/connections.routes.ts), [src/connections/connections.controller.ts](src/connections/connections.controller.ts), [src/connections/connections.service.ts](src/connections/connections.service.ts)
+
+**Request**
+- **Headers:**
+	- **Authorization**: `Bearer <access_token>` (required)
+- **Path Parameters:**
+	- **request_id**: string (required) — UUID of the connection request
+
+**Responses**
+- **200 OK**: Connection request rejected successfully
+	- Body: `{ message: "Connection request rejected" }`
+- **401 Unauthorized**:
+	- `authentification is required` when token is missing/invalid
+- **403 Forbidden**:
+	- `Connection request can not be rejected` when user is not the receiver
+- **404 Not Found**:
+	- `Connection request not found`
+- **500 Internal Server Error**: Unexpected server error
+
+**Examples**
+
+Curl example:
+
+```bash
+curl -X PATCH "http://localhost:3000/api/connections/request/550e8400-e29b-41d4-a716-446655440000/reject" \
+	-H "Authorization: Bearer <your_access_token>"
+```
+
+Axios example:
+
+```ts
+import axios from "axios";
+
+const response = await axios.patch(
+	"http://localhost:3000/api/connections/request/550e8400-e29b-41d4-a716-446655440000/reject",
+	{},
+	{ headers: { Authorization: "Bearer <your_access_token>" } }
+);
+
+console.log(response.data.message);
+```
+
+**Implementation notes**
+- Only the request receiver can reject the connection request.
+- The service deletes the connection request record ([src/connections/connections.service.ts](src/connections/connections.service.ts)).
+
+---
+
+**Connections - Get User Connections**
+
+- **Endpoint:** GET /api/connections
+- **Description:** Retrieve a paginated list of all connections for the authenticated user.
+- **Files:** [src/connections/connections.routes.ts](src/connections/connections.routes.ts), [src/connections/connections.controller.ts](src/connections/connections.controller.ts), [src/connections/connections.service.ts](src/connections/connections.service.ts)
+
+**Request**
+- **Headers:**
+	- **Authorization**: `Bearer <access_token>` (required)
+- **Query Parameters (optional):**
+	- **page**: number (default: 1) — pagination page number
+	- **limit**: number (default: 10) — items per page
+	- **search**: string (optional) — search by user name
+
+**Responses**
+- **200 OK**: Connections retrieved successfully
+	- Body: `{ data: Connection[], total: number, page: number, limit: number }`
+- **401 Unauthorized**:
+	- `authentification is required` when token is missing/invalid
+- **500 Internal Server Error**: Unexpected server error
+
+**Examples**
+
+Curl example:
+
+```bash
+curl -X GET "http://localhost:3000/api/connections?page=1&limit=10" \
+	-H "Authorization: Bearer <your_access_token>"
+```
+
+Axios example:
+
+```ts
+import axios from "axios";
+
+const response = await axios.get("http://localhost:3000/api/connections", {
+	params: { page: 1, limit: 10 },
+	headers: { Authorization: "Bearer <your_access_token>" }
+});
+
+console.log(response.data);
+```
+
+**Implementation notes**
+- The service fetches paginated connections for the authenticated user with connected user details ([src/connections/connections.service.ts](src/connections/connections.service.ts)).
+
+---
+
+**Connections - Get Pending Requests**
+
+- **Endpoint:** GET /api/connections/requests/pending
+- **Description:** Retrieve a paginated list of pending connection requests received by the authenticated user.
+- **Files:** [src/connections/connections.routes.ts](src/connections/connections.routes.ts), [src/connections/connections.controller.ts](src/connections/connections.controller.ts), [src/connections/connections.service.ts](src/connections/connections.service.ts)
+
+**Request**
+- **Headers:**
+	- **Authorization**: `Bearer <access_token>` (required)
+- **Query Parameters (optional):**
+	- **page**: number (default: 1) — pagination page number
+	- **limit**: number (default: 10) — items per page
+
+**Responses**
+- **200 OK**: Pending requests retrieved successfully
+	- Body: `{ data: ConnectionRequest[], total: number, page: number, limit: number }`
+- **401 Unauthorized**:
+	- `authentification is required` when token is missing/invalid
+- **500 Internal Server Error**: Unexpected server error
+
+**Examples**
+
+Curl example:
+
+```bash
+curl -X GET "http://localhost:3000/api/connections/requests/pending?page=1&limit=10" \
+	-H "Authorization: Bearer <your_access_token>"
+```
+
+Axios example:
+
+```ts
+import axios from "axios";
+
+const response = await axios.get("http://localhost:3000/api/connections/requests/pending", {
+	params: { page: 1, limit: 10 },
+	headers: { Authorization: "Bearer <your_access_token>" }
+});
+
+console.log(response.data);
+```
+
+**Implementation notes**
+- The service fetches paginated pending connection requests where the authenticated user is the receiver ([src/connections/connections.service.ts](src/connections/connections.service.ts)).
+
+---
+
+**Connections - Remove Connection**
+
+- **Endpoint:** DELETE /api/connections/:connection_id/unconnect
+- **Description:** Remove an existing connection with another user.
+- **Files:** [src/connections/connections.routes.ts](src/connections/connections.routes.ts), [src/connections/connections.controller.ts](src/connections/connections.controller.ts), [src/connections/connections.service.ts](src/connections/connections.service.ts)
+
+**Request**
+- **Headers:**
+	- **Authorization**: `Bearer <access_token>` (required)
+- **Path Parameters:**
+	- **user_id**: string (required) — UUID of the user to disconnect from
+
+**Responses**
+- **200 OK**: Connection removed successfully
+	- Body: `{ message: "Connection deleted" }`
+- **401 Unauthorized**:
+	- `authentification is required` when token is missing/invalid
+- **404 Not Found**:
+	- `Connection not found`
+- **500 Internal Server Error**: Unexpected server error
+
+**Examples**
+
+Curl example:
+
+```bash
+curl -X DELETE "http://localhost:3000/api/connections/550e8400-e29b-41d4-a716-446655440000" \
+	-H "Authorization: Bearer <your_access_token>"
+```
+
+Axios example:
+
+```ts
+import axios from "axios";
+
+const response = await axios.delete(
+	"http://localhost:3000/api/connections/550e8400-e29b-41d4-a716-446655440000",
+	{ headers: { Authorization: "Bearer <your_access_token>" } }
+);
+
+console.log(response.data.message);
+```
+
+**Implementation notes**
+- The service deletes the connection record for both users ([src/connections/connections.service.ts](src/connections/connections.service.ts)).
