@@ -16,6 +16,7 @@ import postsRouter from "./posts/posts.routes";
 import likesRouter from "./likes/likes.routes"
 import commentsRouter from "./comments/comment.routes";
 import connectionsRouter from "./connections/connections.routes";
+import bookmarksRouter from "./bookmarks/bookmarks.routes";
 const app = express();
 
 
@@ -38,6 +39,7 @@ app.use("/api/posts", postsRouter);
 app.use("/api/likes", likesRouter)
 app.use("/api/comments", commentsRouter);
 app.use("/api/connections", connectionsRouter);
+app.use("/api/bookmarks", bookmarksRouter);
 
 app.get("/api/health", async (req: Request, res: Response) => {
     throw new NotFoundError("This route does not exist");
