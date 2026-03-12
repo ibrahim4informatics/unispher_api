@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { changeAvatarService, changeEmailService, changePasswordService, deleteUserService, getUserById, uploadUserAvatarService } from "./user.service";
+import { changeAvatarService, changeEmailService, changePasswordService, deleteUserService, getCurrentUserProfile, getUserById, uploadUserAvatarService } from "./user.service";
 import { ChangeEmailDto } from "./user.dto";
 import { profile } from "node:console";
 
@@ -45,7 +45,8 @@ const deleteUserController = async (req: Request, res: Response) => {
 
 const getProfileController = async (req: Request, res: Response) => {
     const user_id = req.user?.id || "";
-    const user = await getUserById(user_id);
+    console.log(user_id)
+    const user = await getCurrentUserProfile(user_id);
     return res.status(200).json({ profile: user });
 }
 export { changeEmailController, changePasswordController, changeAvatarController, uploadUserAvatarController, deleteUserController, getProfileController }

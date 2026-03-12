@@ -2,6 +2,7 @@ import db from "../config/db";
 import { BadRequestError } from "../shared/errors/BadRequestError";
 import { NotFoundError } from "../shared/errors/NotFoundError";
 import { ServerError } from "../shared/errors/ServerError";
+import { UnauthorizedError } from "../shared/errors/UnauthorizedError";
 import { verify, hash } from "../shared/services/argon.service";
 import { deleteFromCloudinary, getPublicId, uploadToCloudinary } from "../shared/services/cloudinary.service";
 
@@ -137,9 +138,16 @@ const getUserById = async (user_id: string) => {
         }
     });
 
-    if (!user) throw new NotFoundError("User not found");
-
     return user;
+}
+
+const getCurrentUserProfile = (user_id:string)=>{
+    console.log("this is user profile route")
+
+    const profile = getUserById(user_id);
+    if(!profile) throw new UnauthorizedError("User is not logged in");
+    return profile;
+
 }
 
 export {
@@ -148,6 +156,7 @@ export {
     changePasswordService,
     changeAvatarService,
     deleteUserService,
-    getUserById
+    getUserById,
+    getCurrentUserProfile
 
 }
