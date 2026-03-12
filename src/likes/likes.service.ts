@@ -3,18 +3,18 @@ import { getPostByIdService } from "../posts/posts.service";
 import { BadRequestError } from "../shared/errors/BadRequestError"
 import { NotFoundError } from "../shared/errors/NotFoundError";
 
-export const createLikeService = async (user_id: string, post_id: number) => {
+export const createLikeService = async (user_id: string, post_id: string | null) => {
 
     if (!post_id) throw new BadRequestError("post_id is required");
 
-    const post = await getPostByIdService(post_id);
+    const post = await getPostByIdService(parseInt(post_id));
     if (!post) throw new NotFoundError("Can not find post");
 
     const isAlreadyLiked = await db.like.findUnique({
         where: {
             user_id_post_id: {
                 user_id,
-                post_id
+                post_id: parseInt(post_id)
             }
         }
     });
@@ -24,17 +24,18 @@ export const createLikeService = async (user_id: string, post_id: number) => {
     await db.like.create({
         data: {
             user_id,
-            post_id
+            post_id: parseInt(post_id)
         }
     });
 }
 
-export const deleteLikeService = async (user_id: string, post_id: number) => {
+export const deleteLikeService = async (user_id: string, post_id: string | null) => {
+    if(!post_id) throw new BadRequestError("Post id is required")
     const like = await db.like.findUnique({
         where: {
             user_id_post_id: {
                 user_id,
-                post_id
+                post_id: parseInt(post_id)
             }
         }
     });

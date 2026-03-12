@@ -5,7 +5,7 @@ import { createLikeController, deleteLikeController } from "./likes.controller";
 
 const router = Router();
 
-router.post("/", isAuthenticated, asyncHandler(createLikeController));
-router.delete("/", isAuthenticated, asyncHandler(deleteLikeController));
+router.post("/:post_id", isAuthenticated, asyncHandler(createLikeController));
+router.delete("/:post_id", isAuthenticated, asyncHandler(deleteLikeController));
 
 export default router;
