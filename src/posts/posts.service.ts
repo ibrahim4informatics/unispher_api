@@ -19,6 +19,7 @@ const createPostService = async (author_id: string, data: CreatePostDto, file: E
     //upload files if exist
     if (file && file.length > 0) {
 
+
         const uploadPromises = file.map((f) => (
             uploadToCloudinary(f, `posts/${post.id}/attachments`)
         ));
@@ -76,7 +77,7 @@ const deletePostBydIdService = async (user_id?: string, post_id?: number) => {
 }
 
 // get posts based on user
-const getPostsService = async (query: GetPostsQueryDto) => {
+const getPostsService = async (query: GetPostsQueryDto, user_id: string) => {
 
     const page = query.page || 1;
 
@@ -88,6 +89,17 @@ const getPostsService = async (query: GetPostsQueryDto) => {
             created_at: "desc"
         },
         include: {
+            likes: {
+                select: {
+                    user_id: true
+                }
+            },
+            booksmarks: {
+                select: {
+                    user_id: true
+                }
+            }
+            ,
             postMedias: true,
             author: true,
             _count: {
@@ -101,22 +113,73 @@ const getPostsService = async (query: GetPostsQueryDto) => {
     }
     );
 
-    return posts;
+    const returnedPosts = posts.map(({ likes, booksmarks, ...post }) => {
+
+        const is_liked = likes.filter(l => l.user_id === user_id).length;
+        const is_booked = booksmarks.filter(b => b.user_id === user_id).length;
+
+
+        return {
+            ...post, is_liked: is_liked > 0 ? true : false,
+            is_booked: is_booked > 0 ? true : false
+        }
+    })
+
+    return returnedPosts;
 
 
 }
 
-const getPostByIdService = async (post_id: number) => {
+const getPostByIdService = async (post_id: number, user_id?: string) => {
 
     const post = await db.post.findUnique({
         where: { id: post_id }, include: {
+            likes: {
+                select: {
+                    user_id: true
+                }
+            },
+            booksmarks: {
+
+                select: {
+                    user_id: true
+                }
+
+            },
+
             postMedias: true,
-            author: true,
+            author: {
+
+                include: {
+                    student_profile: {
+                        include: {
+                            field: true,
+                            university: true
+                        }
+                    },
+                    teacher_profile: {
+                        include: {
+                            university: true
+                        }
+                    }
+                }
+            },
+            _count: {
+                select: {
+                    booksmarks: true,
+                    likes: true
+                }
+            }
         }
     });
 
     if (!post) throw new NotFoundError("post can not be found");
-    return post;
+
+
+    const is_liked = post.likes.filter(l => l.user_id === user_id).length;
+    const is_booked = post.booksmarks.filter(b => b.user_id === user_id).length;
+    const { likes, booksmarks, ...postData } = post
+    return { ...postData, is_booked: is_booked > 0 ? true : false, is_liked: is_liked > 0 ? true : false };
 
 }
 export { createPostService, deletePostBydIdService, getPostByIdService, getPostsService };

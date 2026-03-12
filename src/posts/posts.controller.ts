@@ -20,13 +20,15 @@ export const deletePostController = async (req: Request, res: Response) => {
 
 export const getPostsController = async (req: Request, res: Response) => {
     const query: GetPostsQueryDto = req.query;
-    const posts = await getPostsService(query);
+    const user_id = req.user.id;
+    const posts = await getPostsService(query, user_id);
     return res.status(200).json({ posts });
 }
 
 export const getPostByIdController = async (req: Request, res: Response) => {
     const post_id = req.params.post_id as string;
-    const post = await getPostByIdService(parseInt(post_id));
+    const user_id = req.user.id
+    const post = await getPostByIdService(parseInt(post_id), user_id);
 
     return res.status(200).json({
         post
