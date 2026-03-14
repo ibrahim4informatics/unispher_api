@@ -1,3 +1,4 @@
+import { file } from "zod";
 import db from "../config/db";
 import { BadRequestError } from "../shared/errors/BadRequestError";
 import { ForbiddenError } from "../shared/errors/ForbidenError";
@@ -7,6 +8,8 @@ import { GetPostsQueryDto, type CreatePostDto } from "./posts.dtos";
 
 
 const createPostService = async (author_id: string, data: CreatePostDto, file: Express.Multer.File[]) => {
+
+    console.log(file)
 
     const post = await db.post.create({
         data: {
@@ -182,4 +185,67 @@ const getPostByIdService = async (post_id: number, user_id?: string) => {
     return { ...postData, is_booked: is_booked > 0 ? true : false, is_liked: is_liked > 0 ? true : false };
 
 }
-export { createPostService, deletePostBydIdService, getPostByIdService, getPostsService };
+
+const updatePostByIdService = async (post_id: number, user_id: string, data: CreatePostDto, files: Express.Multer.File[]) => {
+
+    const post = await db.post.findUnique({ where: { id: post_id } });
+    if (!post) throw new NotFoundError("Post can not be found");
+    if (post.author_id !== user_id) throw new ForbiddenError("Post can not be updated")
+
+    if (files && files.length > 0) {
+
+        const uploadPromises = files.map((f) => (
+            uploadToCloudinary(f, `posts/${post.id}/attachments`)
+        ));
+
+        const attachments = await Promise.all(uploadPromises);
+
+        const data = attachments.map((url) => {
+
+            const mediaType = url.split('.').pop()?.toLowerCase();
+            let type: "IMAGE" | "VIDEO" | "OTHER" = "OTHER";
+            if (mediaType) {
+                if (["jpg", "jpeg", "png", "gif"].includes(mediaType)) {
+                    type = "IMAGE";
+                } else if (["mp4", "avi", "mov"].includes(mediaType)) {
+                    type = "VIDEO";
+                }
+            }
+            return {
+                post_id: post.id,
+                url,
+                type
+            }
+        });
+
+        await db.postMedia.createMany({
+            data
+        });
+    }
+
+    await db.post.update({
+        where: {
+            id: post_id
+        },
+        data
+    })
+
+}
+
+
+const deletePostMediaByIdService = async (post_media_id: number, user_id: string) => {
+
+    const postMedia = await db.postMedia.findUnique({ where: { id: post_media_id }, include: { post: true } });
+    if (!postMedia) throw new NotFoundError("Post media can not be found");
+    if (postMedia.post.author_id !== user_id) throw new ForbiddenError("Post media can not be deleted");
+
+    const public_id = getPublicId(postMedia.url);
+    console.log(public_id);
+    const deletep = await deleteFromCloudinary(public_id, postMedia.type === "IMAGE" ? "image" : postMedia.type === "VIDEO" ? "video" : "raw");
+    console.log(deletep)
+    await db.postMedia.delete({ where: { id: post_media_id } });
+
+}
+
+
+export { createPostService, deletePostBydIdService, getPostByIdService, getPostsService, updatePostByIdService, deletePostMediaByIdService };

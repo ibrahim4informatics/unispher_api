@@ -50,6 +50,6 @@ export const getCommentsOfPost = async (post_id: number | null) => {
     if (!post_id) throw new BadRequestError("Post id is required");
     const post = await db.post.findUnique({ where: { id: post_id } });
     if (!post) throw new NotFoundError("Post does not exist")
-    const comments = await db.comment.findMany({ where: { post_id }, include: { author: true } });
+    const comments = await db.comment.findMany({ where: { post_id }, include: { author: true }, orderBy: { created_at: "desc" } });
     return comments;
 }

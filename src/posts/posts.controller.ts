@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { createPostService, deletePostBydIdService, getPostByIdService, getPostsService } from "./posts.service";
-import { GetPostsQueryDto } from "./posts.dtos";
+import { createPostService, deletePostBydIdService, deletePostMediaByIdService, getPostByIdService, getPostsService, updatePostByIdService } from "./posts.service";
+import { CreatePostDto, GetPostsQueryDto } from "./posts.dtos";
 
 
 export const createPostController = async (req: Request, res: Response) => {
@@ -36,3 +36,20 @@ export const getPostByIdController = async (req: Request, res: Response) => {
 
 }
 
+
+export const updatePostByIdController = async (req: Request, res: Response) => {
+    const post_id = req.params.post_id as string;
+    const user_id = req.user.id;
+    const data: CreatePostDto = req.body;
+    const files = req.files as Express.Multer.File[] || [];
+    await updatePostByIdService(parseInt(post_id), user_id, data, files);
+    return res.status(200).json({ message: "Post updated successfully" });
+}
+
+
+export const deletePostMediaByIdController = async (req: Request, res: Response) => {
+    const media_id = req.params.media_id as string;
+    const user_id = req.user.id;
+    await deletePostMediaByIdService(parseInt(media_id), user_id);
+    return res.status(200).json({ message: "Post media deleted successfully" });
+}
