@@ -1,5 +1,5 @@
 import { Request, Response } from "express"
-import { acceptConnectionRequestService, deleteConnectionService, getUserConnectionRequestsService, getUserConnectionsService, rejectConnectionRequestService, sendConnectionRequestService } from "./connections.service";
+import { acceptConnectionRequestService, deleteConnectionService, getRecommendedConnectionsService, getUserConnectionRequestsService, getUserConnectionsService, rejectConnectionRequestService, sendConnectionRequestService } from "./connections.service";
 import { SendConnectionRequestDto } from "./connections.dto";
 
 export const getConncetionsController = async (req: Request, res: Response) => {
@@ -54,4 +54,14 @@ export const deleteConnectionController = async (req: Request, res: Response) =>
     await deleteConnectionService(connection_id, user_id);
     return res.status(200).json({ message: "Connection deleted" });
 
+}
+
+
+export const getConncetionsSuggestionController = async (req: Request, res: Response) => {
+
+    const user_id = req.user.id;
+    const page = req.params.page;
+
+    const results = await getRecommendedConnectionsService(user_id, parseInt(page as string) || undefined);
+    return res.status(200).json(results);
 }

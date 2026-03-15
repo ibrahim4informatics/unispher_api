@@ -222,3 +222,67 @@ export const getUserConnectionsIds = async (user_id: string) => {
     const connectedUsersIds = connections_db.map(conn => conn.receiver_id === user_id ? conn.sender_id : conn.receiver_id);
     return connectedUsersIds;
 }
+
+export const getRecommendedConnectionsService = async (user_id: string, page: number = 1) => {
+    const limit = 20;
+    const userConnections = await db.connection.findMany({
+        where: {
+            OR: [
+                { receiver_id: user_id, status: "ACCEPTED" },
+                { sender_id: user_id, status: "ACCEPTED" },
+            ],
+        },
+        select: { sender_id: true, receiver_id: true },
+    });
+
+    const userConnectedIds = userConnections.map(conn =>
+        conn.sender_id === user_id ? conn.receiver_id : conn.sender_id
+    );
+
+    const usersConnectedConnections = await db.connection.findMany({
+        where: {
+            OR: [
+                { receiver_id: { in: userConnectedIds }, status: "ACCEPTED" },
+                { sender_id: { in: userConnectedIds }, status: "ACCEPTED" },
+            ],
+        },
+        take: 80,
+        orderBy: {
+            created_at: "desc"
+        }
+    });
+
+    const suggestionUserIds = Array.from(
+        new Set(
+            usersConnectedConnections.map(conn =>
+                userConnectedIds.includes(conn.receiver_id) ? conn.sender_id : conn.receiver_id
+            )
+        )
+    ).filter(
+        id => id !== user_id && !userConnectedIds.includes(id)
+    );
+
+    const suggestions = await db.user.findMany({
+        where: { id: { in: suggestionUserIds } },
+        select: {
+            first_name: true,
+            last_name: true,
+            role: true,
+            avatar_url: true,
+            student_profile: { select: { university: true, field: true } },
+            teacher_profile: { select: { university: true, academic_title: true } },
+        },
+        take: limit + 1,
+        skip: (page - 1) * limit,
+
+        orderBy: {
+            created_at: "desc"
+        }
+    });
+
+    const has_more = suggestions.length > limit;
+    if (has_more) suggestions.pop();
+
+
+    return { suggestions, has_more };
+};
