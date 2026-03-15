@@ -9,7 +9,7 @@ const router = Router();
 
 router.post("/", isAuthenticated, validate(SendConnectionRequestDto), asyncHandler(sendConnectionRequestController));
 
-router.get("/", isAuthenticated, asyncHandler(getConncetionsController))
+router.get("/", isAuthenticated, validateQuery(GetConnectionsRequestsQueryDto), asyncHandler(getConncetionsController))
 router.get("/requests", isAuthenticated, validateQuery(GetConnectionsRequestsQueryDto), asyncHandler(getConnectionRequestsController));
 
 router.patch("/:connection_id/accept", isAuthenticated, asyncHandler(acceptConnectionRequestController));

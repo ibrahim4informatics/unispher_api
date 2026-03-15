@@ -5,7 +5,8 @@ import { SendConnectionRequestDto } from "./connections.dto";
 export const getConncetionsController = async (req: Request, res: Response) => {
 
     const user_id = req.user.id;
-    const connections = await getUserConnectionsService(user_id);
+    const query = req.query;
+    const connections = await getUserConnectionsService(user_id, query);
     return res.status(200).json({ connections });
 
 }
@@ -14,14 +15,14 @@ export const getConnectionRequestsController = async (req: Request, res: Respons
 
     const user_id = req.user.id;
     const query = req.query;
-    const connectionRequests = await getUserConnectionRequestsService(user_id, query);
-    return res.status(200).json({ connectionRequests });
+    const result = await getUserConnectionRequestsService(user_id, query);
+    return res.status(200).json({ ...result });
 }
 
 
 export const sendConnectionRequestController = async (req: Request, res: Response) => {
     const sender_id = req.user.id;
-    const data:SendConnectionRequestDto = req.body;
+    const data: SendConnectionRequestDto = req.body;
     const connection = await sendConnectionRequestService(data, sender_id);
     return res.status(201).json({ connection });
 
@@ -46,7 +47,7 @@ export const rejectConnectionRequestController = async (req: Request, res: Respo
 }
 
 
-export const  deleteConnectionController = async (req: Request, res: Response) => {
+export const deleteConnectionController = async (req: Request, res: Response) => {
 
     const user_id = req.user.id;
     const connection_id = parseInt(req.params.connection_id as string);

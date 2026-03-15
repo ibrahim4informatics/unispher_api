@@ -1,4 +1,5 @@
 import db from "../config/db";
+import { createNotification } from "../notfications/notifications.service";
 import { BadRequestError } from "../shared/errors/BadRequestError";
 import { NotFoundError } from "../shared/errors/NotFoundError";
 import { UnauthorizedError } from "../shared/errors/UnauthorizedError";
@@ -7,14 +8,44 @@ import { type CreateCommentDto, type UpdateCommentDto } from "./comments.dto";
 export const createComment = async (data: CreateCommentDto, user_id: string) => {
 
     if (!user_id) throw new UnauthorizedError("Can not create comment");
+    const post = await db.post.findUnique({
+        where: { id: data.post_id },
+        select: {
+            id: true,
+            author_id: true
+        }
+    },
+    );
+
+    if (!post) throw new NotFoundError("Post does not exists");
 
     const comment = await db.comment.create({
         data: {
             ...data,
             author_id: user_id
+        },
+        include: {
+            author: true
         }
     });
 
+    const truncatedContent =
+        comment.content.length > 25
+            ? comment.content.slice(0, 25) + "…"
+            : comment.content;
+    await createNotification(
+        {
+
+            type: "COMMENT_POST",
+            actor_id: user_id,
+            entity_id: post.id,
+            is_read: false,
+            body: `${comment.author.first_name} ${comment.author.last_name} commented on your post: "${truncatedContent}"`,
+            title: "You have a new comment on your post"
+
+        },
+        [post.author_id]
+    )
     return comment;
 }
 

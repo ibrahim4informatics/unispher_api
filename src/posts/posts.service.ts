@@ -5,17 +5,22 @@ import { ForbiddenError } from "../shared/errors/ForbidenError";
 import { NotFoundError } from "../shared/errors/NotFoundError";
 import { deleteFromCloudinary, getPublicId, uploadToCloudinary } from "../shared/services/cloudinary.service";
 import { GetPostsQueryDto, type CreatePostDto } from "./posts.dtos";
+import { getUserConnectionsIds } from "../connections/connections.service";
+import { createNotification } from "../notfications/notifications.service";
 
 
 const createPostService = async (author_id: string, data: CreatePostDto, file: Express.Multer.File[]) => {
 
-    console.log(file)
+    // console.log(file)
 
     const post = await db.post.create({
         data: {
             author_id,
             content: data.content,
             type: data.type,
+        },
+        include: {
+            author: true
         }
     });
 
@@ -50,6 +55,19 @@ const createPostService = async (author_id: string, data: CreatePostDto, file: E
         await db.postMedia.createMany({
             data
         });
+
+
+        const connectedUsersIds = await getUserConnectionsIds(author_id);
+        if (connectedUsersIds.length > 0) {
+            createNotification({
+                type: "PUBLISHED_POST",
+                actor_id: author_id,
+                entity_id: post.id,
+                is_read: false,
+                title: "New post added",
+                body: `${post.author.first_name} ${post.author.last_name} published new post`
+            }, connectedUsersIds)
+        }
 
         return post;
 
