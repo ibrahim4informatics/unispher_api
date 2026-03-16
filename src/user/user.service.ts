@@ -219,9 +219,6 @@ const getUsersService = async (
 
     const limit = 20;
     const page = query?.page || 1;
-
-    const nameParts = query?.name ? query.name.split(" ") : [];
-
     const users = await db.user.findMany({
         where: {
             id: { not: user_id },
