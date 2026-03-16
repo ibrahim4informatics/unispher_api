@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { changeAvatarService, changeEmailService, changePasswordService, deleteUserService, getCurrentUserProfile, getUserById, uploadUserAvatarService } from "./user.service";
+import { changeAvatarService, changeEmailService, changePasswordService, deleteUserService, getCurrentUserProfile, getUserById, getUsersService, uploadUserAvatarService } from "./user.service";
 import { ChangeEmailDto } from "./user.dto";
 import { profile } from "node:console";
 
@@ -49,5 +49,23 @@ const getProfileController = async (req: Request, res: Response) => {
     const user = await getCurrentUserProfile(user_id);
     return res.status(200).json({ profile: user });
 }
-export { changeEmailController, changePasswordController, changeAvatarController, uploadUserAvatarController, deleteUserController, getProfileController }
+
+
+const getUserByIdController = async (req: Request, res: Response) => {
+    const current_user_id = req.user.id;
+    const user_id = req.params.user_id as string;
+    const user = await getUserById(user_id, current_user_id);
+
+    return res.status(200).json({
+        user
+    })
+}
+
+const getUsersController = async (req: Request, res: Response) => {
+    const user_id = req.user.id;
+    const query: { page?: number, role?: "STUDENT" | "TEACHER", name?: string } = req.query;
+    const results = await getUsersService(query, user_id);
+    return res.status(200).json(results)
+}
+export { changeEmailController, changePasswordController, changeAvatarController, uploadUserAvatarController, getUsersController, deleteUserController, getProfileController, getUserByIdController }
 
