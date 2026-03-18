@@ -183,6 +183,7 @@ const getCurrentUserProfile = async (user_id: string) => {
         },
 
         select: {
+            id: true,
             first_name: true,
             last_name: true,
             avatar_url: true,

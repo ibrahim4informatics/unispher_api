@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createPostService, deletePostBydIdService, deletePostMediaByIdService, getPostByIdService, getPostsService, updatePostByIdService } from "./posts.service";
+import { createPostService, deletePostBydIdService, deletePostMediaByIdService, getCurrentUserPostsService, getPostByIdService, getPostsService, updatePostByIdService } from "./posts.service";
 import { CreatePostDto, GetPostsQueryDto } from "./posts.dtos";
 
 
@@ -52,4 +52,11 @@ export const deletePostMediaByIdController = async (req: Request, res: Response)
     const user_id = req.user.id;
     await deletePostMediaByIdService(parseInt(media_id), user_id);
     return res.status(200).json({ message: "Post media deleted successfully" });
+}
+
+export const getCurrentUserPostsController = async (req: Request, res: Response) => {
+    const user_id = req.user.id;
+    const page = req.query.page as string;
+    const results = await getCurrentUserPostsService(user_id, parseInt(page) || undefined);
+    return res.status(200).json(results);
 }

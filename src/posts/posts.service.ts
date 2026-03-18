@@ -266,4 +266,58 @@ const deletePostMediaByIdService = async (post_media_id: number, user_id: string
 }
 
 
-export { createPostService, deletePostBydIdService, getPostByIdService, getPostsService, updatePostByIdService, deletePostMediaByIdService };
+const getCurrentUserPostsService = async (user_id: string, page: number = 1) => {
+
+    const limite = 20;
+
+    const posts = await db.post.findMany({
+        where: {
+            author_id: user_id
+        },
+        take: limite,
+        skip: (page - 1) * limite,
+
+        orderBy: {
+            created_at: "desc"
+        },
+        include: {
+            likes: {
+                select: {
+                    user_id: true
+                }
+            },
+            booksmarks: {
+                select: {
+                    user_id: true
+                }
+            }
+            ,
+            postMedias: true,
+            author: true,
+            _count: {
+                select: {
+                    comments: true,
+                    likes: true,
+                    booksmarks: true
+                }
+            }
+        }
+    }
+    );
+
+    const has_more = posts.length > limite;
+    if (has_more) posts.pop();
+
+    const refactored_posts = posts.map(({ likes, booksmarks, ...post }) => {
+
+        const is_liked = likes.filter(l => l.user_id === user_id).length > 0;
+        const is_booked = booksmarks.filter(b => b.user_id === user_id).length > 0;
+
+        return { ...post, is_liked, is_booked }
+
+    });
+    return { posts: refactored_posts, page, has_more }
+}
+
+
+export { createPostService, deletePostBydIdService, getPostByIdService, getPostsService, updatePostByIdService, deletePostMediaByIdService, getCurrentUserPostsService };
