@@ -274,7 +274,7 @@ const getCurrentUserPostsService = async (user_id: string, page: number = 1) => 
         where: {
             author_id: user_id
         },
-        take: limite,
+        take: limite + 1,
         skip: (page - 1) * limite,
 
         orderBy: {

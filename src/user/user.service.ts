@@ -41,6 +41,15 @@ const changeEmailService = async (user_id: string, new_email: string) => {
 
     if (!user) throw new NotFoundError("User not found");
 
+    const emailIsUsed = await db.user.findUnique({
+        where: { email: new_email },
+        select: {
+            id: true
+        }
+    });
+
+    if (emailIsUsed) throw new BadRequestError("Email is used");
+
     await db.user.update({
         where: {
             id: user_id
