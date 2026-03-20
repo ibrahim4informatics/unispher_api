@@ -2,7 +2,7 @@ import { StudentProfile } from "@prisma/client";
 import db from "../config/db";
 import { BadRequestError } from "../shared/errors/BadRequestError";
 import { NotFoundError } from "../shared/errors/NotFoundError";
-import { CreateStudentProfileDto } from "./student.dto";
+import { CreateStudentProfileDto, UpdateStudentProfileDto } from "./student.dto";
 import { uploadToCloudinary } from "../shared/services/cloudinary.service";
 import { ServerError } from "../shared/errors/ServerError";
 
@@ -32,7 +32,7 @@ import { ServerError } from "../shared/errors/ServerError";
  *   user_id: 'usr_678'
  * });
  */
-const createStudentProfile = async (createStudentProfileDto: CreateStudentProfileDto): Promise<StudentProfile> => {
+export const createStudentProfile = async (createStudentProfileDto: CreateStudentProfileDto): Promise<StudentProfile> => {
 
     const user_exists = await db.user.findUnique({
         where: {
@@ -105,8 +105,45 @@ const createStudentProfile = async (createStudentProfileDto: CreateStudentProfil
 
 
 
-
-
-export {
-    createStudentProfile,
+export const updateStudentProfileService = async (updateStudentProfileDto: UpdateStudentProfileDto, user_id: string) => {
+    const profile = await db.studentProfile.findUnique({
+        where: {
+            user_id
+        }
+    });
+    if (!profile) throw new BadRequestError("Invalid user");
+    await db.studentProfile.update({
+        where: {
+            user_id
+        },
+        data: {
+            univeristy_id: updateStudentProfileDto.university_id,
+            faculty_id: updateStudentProfileDto.faculty_id,
+            department_id: updateStudentProfileDto.department_id,
+            level_id: updateStudentProfileDto.level_id,
+            field_id: updateStudentProfileDto.field_id
+        }
+    });
 }
+
+
+export const getStudentAcademicProfileService = async (user_id: string) => {
+    const profile = await db.studentProfile.findUnique({
+        where: {
+            user_id
+        },
+        select: {
+            univeristy_id: true,
+            field_id: true,
+            department_id: true,
+            faculty_id: true,
+            level_id: true
+        }
+    })
+
+    if (!profile) throw new BadRequestError("Invalid user id");
+    return profile;
+}
+
+
+
