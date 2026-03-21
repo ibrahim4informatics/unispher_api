@@ -6,6 +6,7 @@ import { ServerError } from "../shared/errors/ServerError";
 import { UnauthorizedError } from "../shared/errors/UnauthorizedError";
 import { verify, hash } from "../shared/services/argon.service";
 import { deleteFromCloudinary, getPublicId, uploadToCloudinary } from "../shared/services/cloudinary.service";
+import { type UpdateUserDto } from "./user.dto";
 
 const uploadUserAvatarService = async (user_id?: string, picture?: Express.Multer.File) => {
 
@@ -281,6 +282,23 @@ const getUsersService = async (
     };
 };
 
+
+const updateUserService = async (data: UpdateUserDto, user_id: string) => {
+    const user = await db.user.findUnique({ where: { id: user_id } });
+    if (!user) throw new ForbiddenError("Can not update the profile");
+
+    await db.user.update({
+        where: {
+            id: user_id,
+        },
+        data: {
+            first_name: data.first_name ? data.first_name : undefined,
+            last_name: data.last_name ? data.last_name : undefined,
+            bio: data.bio ? data.bio : undefined
+        }
+    });
+}
+
 export {
     uploadUserAvatarService,
     changeEmailService,
@@ -289,6 +307,7 @@ export {
     deleteUserService,
     getUserById,
     getCurrentUserProfile,
-    getUsersService
+    getUsersService,
+    updateUserService
 
 }

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { changeAvatarService, changeEmailService, changePasswordService, deleteUserService, getCurrentUserProfile, getUserById, getUsersService, uploadUserAvatarService } from "./user.service";
-import { ChangeEmailDto } from "./user.dto";
+import { changeAvatarService, changeEmailService, changePasswordService, deleteUserService, getCurrentUserProfile, getUserById, getUsersService, updateUserService, uploadUserAvatarService } from "./user.service";
+import { type ChangeEmailDto, type UpdateUserDto } from "./user.dto";
 import { profile } from "node:console";
 
 
@@ -67,5 +67,13 @@ const getUsersController = async (req: Request, res: Response) => {
     const results = await getUsersService(query, user_id);
     return res.status(200).json(results)
 }
-export { changeEmailController, changePasswordController, changeAvatarController, uploadUserAvatarController, getUsersController, deleteUserController, getProfileController, getUserByIdController }
+
+const updateUserController = async (req: Request, res: Response) => {
+    const user_id = req.user.id;
+    const data: UpdateUserDto = req.body;
+
+    await updateUserService(data, user_id);
+    return res.status(200).json({ message: "User updated" });
+}
+export { changeEmailController, changePasswordController, updateUserController,changeAvatarController, uploadUserAvatarController, getUsersController, deleteUserController, getProfileController, getUserByIdController }
 

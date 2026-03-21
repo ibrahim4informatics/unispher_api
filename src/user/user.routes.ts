@@ -1,16 +1,17 @@
 import { Router } from "express";
 import { asyncHandler } from "../shared/asyncHandler";
-import { changeAvatarController, changeEmailController, changePasswordController, deleteUserController, getProfileController, getUserByIdController, getUsersController, uploadUserAvatarController } from "./user.controller";
+import { changeAvatarController, changeEmailController, changePasswordController, deleteUserController, getProfileController, getUserByIdController, getUsersController, updateUserController, uploadUserAvatarController } from "./user.controller";
 import uploadUserAvatar from "../midlewares/multer/uploadUserAvatar";
 import isAuthenticated from "../midlewares/auth/is-authenticated.midleware";
 import validate from "../midlewares/validate.midleware";
-import { ChangeEmailDto, ChangePasswordDto } from "./user.dto";
+import { ChangeEmailDto, ChangePasswordDto, UpdateUserDto } from "./user.dto";
 
 
 const router = Router();
 
 
 router.get("/", isAuthenticated, asyncHandler(getUsersController));
+router.patch("/", isAuthenticated, validate(UpdateUserDto), asyncHandler(updateUserController))
 router.get("/me", isAuthenticated, asyncHandler(getProfileController));
 router.post("/avatar", uploadUserAvatar.single("picture"), asyncHandler(uploadUserAvatarController));
 
