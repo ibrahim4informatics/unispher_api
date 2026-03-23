@@ -1,0 +1,23 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const asyncHandler_1 = require("../shared/asyncHandler");
+const user_controller_1 = require("./user.controller");
+const uploadUserAvatar_1 = __importDefault(require("../midlewares/multer/uploadUserAvatar"));
+const is_authenticated_midleware_1 = __importDefault(require("../midlewares/auth/is-authenticated.midleware"));
+const validate_midleware_1 = __importDefault(require("../midlewares/validate.midleware"));
+const user_dto_1 = require("./user.dto");
+const router = (0, express_1.Router)();
+router.get("/", is_authenticated_midleware_1.default, (0, asyncHandler_1.asyncHandler)(user_controller_1.getUsersController));
+router.patch("/", is_authenticated_midleware_1.default, (0, validate_midleware_1.default)(user_dto_1.UpdateUserDto), (0, asyncHandler_1.asyncHandler)(user_controller_1.updateUserController));
+router.get("/me", is_authenticated_midleware_1.default, (0, asyncHandler_1.asyncHandler)(user_controller_1.getProfileController));
+router.post("/avatar", uploadUserAvatar_1.default.single("picture"), (0, asyncHandler_1.asyncHandler)(user_controller_1.uploadUserAvatarController));
+router.patch("/email", is_authenticated_midleware_1.default, (0, validate_midleware_1.default)(user_dto_1.ChangeEmailDto), (0, asyncHandler_1.asyncHandler)(user_controller_1.changeEmailController));
+router.patch("/password", is_authenticated_midleware_1.default, (0, validate_midleware_1.default)(user_dto_1.ChangePasswordDto), (0, asyncHandler_1.asyncHandler)(user_controller_1.changePasswordController));
+router.patch("/avatar", is_authenticated_midleware_1.default, uploadUserAvatar_1.default.single("picture"), (0, asyncHandler_1.asyncHandler)(user_controller_1.changeAvatarController));
+router.delete("/", is_authenticated_midleware_1.default, (0, asyncHandler_1.asyncHandler)(user_controller_1.deleteUserController));
+router.get("/:user_id", is_authenticated_midleware_1.default, (0, asyncHandler_1.asyncHandler)(user_controller_1.getUserByIdController));
+exports.default = router;

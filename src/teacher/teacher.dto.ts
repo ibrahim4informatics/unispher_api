@@ -12,3 +12,8 @@ export const CreateTeacherProfileDto = z.object({
 
 export type CreateTeacherProfileDto = z.infer<typeof CreateTeacherProfileDto>;
 
+
+
+export const UpdateTeacherProfileDto = CreateTeacherProfileDto.partial();
+
+export type UpdateTeacherProfileDto = z.infer<typeof UpdateTeacherProfileDto>;

@@ -1,7 +1,7 @@
 import db from "../config/db";
 import { BadRequestError } from "../shared/errors/BadRequestError";
 import { NotFoundError } from "../shared/errors/NotFoundError";
-import { type CreateTeacherProfileDto } from "./teacher.dto";
+import { UpdateTeacherProfileDto, type CreateTeacherProfileDto } from "./teacher.dto";
 
 const createTeacherProfileService = async (data: CreateTeacherProfileDto) => {
 
@@ -31,4 +31,40 @@ const createTeacherProfileService = async (data: CreateTeacherProfileDto) => {
     return profile;
 }
 
-export { createTeacherProfileService };
+
+const getTeacherProfileService = async (teacher_id: string) => {
+    const profile = await db.teacherProfile.findUnique({
+        where: {
+            user_id: teacher_id
+        }
+    });
+    if (!profile) throw new NotFoundError("Teacher profile not found");
+    return profile;
+}
+
+const updateTeacherProfileService = async (teacher_id: string, data: UpdateTeacherProfileDto) => {
+    const profile = await db.teacherProfile.findUnique({
+        where: {
+            user_id: teacher_id
+        }
+    });
+    if (!profile) throw new NotFoundError("Teacher profile not found");
+
+    await db.teacherProfile.update({
+        where: {
+            user_id: teacher_id
+        },
+        data: {
+            univeristy_id: data.university_id || profile.univeristy_id,
+            phone_number: data.phone_number || profile.phone_number,
+            university_of_study: data.university_of_study || profile.university_of_study,
+            field_of_study: data.field_of_study || profile.field_of_study,
+            specialization: data.specialization || profile.specialization,
+            academic_title: data.academic_title || profile.academic_title,
+        }
+    });
+
+}
+
+
+export { createTeacherProfileService, getTeacherProfileService, updateTeacherProfileService };

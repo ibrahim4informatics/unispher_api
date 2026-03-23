@@ -1,0 +1,22 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const validate_midleware_1 = __importDefault(require("../midlewares/validate.midleware"));
+const posts_dtos_1 = require("./posts.dtos");
+const asyncHandler_1 = require("../shared/asyncHandler");
+const posts_controller_1 = require("./posts.controller");
+const is_authenticated_midleware_1 = __importDefault(require("../midlewares/auth/is-authenticated.midleware"));
+const uploadPostMedias_1 = __importDefault(require("../midlewares/multer/uploadPostMedias"));
+const validate_query_midleware_1 = __importDefault(require("../midlewares/validate-query.midleware"));
+const router = (0, express_1.Router)();
+router.get("/", is_authenticated_midleware_1.default, (0, validate_query_midleware_1.default)(posts_dtos_1.GetPostsQueryDto), (0, asyncHandler_1.asyncHandler)(posts_controller_1.getPostsController));
+router.post("/", is_authenticated_midleware_1.default, uploadPostMedias_1.default.array("medias"), (0, validate_midleware_1.default)(posts_dtos_1.CreatePostDto), (0, asyncHandler_1.asyncHandler)(posts_controller_1.createPostController));
+router.get("/me", is_authenticated_midleware_1.default, (0, asyncHandler_1.asyncHandler)(posts_controller_1.getCurrentUserPostsController));
+router.delete("/post_medias/:media_id", is_authenticated_midleware_1.default, (0, asyncHandler_1.asyncHandler)(posts_controller_1.deletePostMediaByIdController));
+router.get("/:post_id", is_authenticated_midleware_1.default, (0, asyncHandler_1.asyncHandler)(posts_controller_1.getPostByIdController));
+router.patch("/:post_id", is_authenticated_midleware_1.default, uploadPostMedias_1.default.array("medias"), (0, validate_midleware_1.default)(posts_dtos_1.CreatePostDto), (0, asyncHandler_1.asyncHandler)(posts_controller_1.updatePostByIdController));
+router.delete("/:post_id", is_authenticated_midleware_1.default, (0, asyncHandler_1.asyncHandler)(posts_controller_1.deletePostController));
+exports.default = router;

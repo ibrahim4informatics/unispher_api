@@ -1,0 +1,21 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const is_authenticated_midleware_1 = __importDefault(require("../midlewares/auth/is-authenticated.midleware"));
+const asyncHandler_1 = require("../shared/asyncHandler");
+const connections_controller_1 = require("./connections.controller");
+const validate_query_midleware_1 = __importDefault(require("../midlewares/validate-query.midleware"));
+const connections_dto_1 = require("./connections.dto");
+const validate_midleware_1 = __importDefault(require("../midlewares/validate.midleware"));
+const router = (0, express_1.Router)();
+router.post("/", is_authenticated_midleware_1.default, (0, validate_midleware_1.default)(connections_dto_1.SendConnectionRequestDto), (0, asyncHandler_1.asyncHandler)(connections_controller_1.sendConnectionRequestController));
+router.get("/", is_authenticated_midleware_1.default, (0, validate_query_midleware_1.default)(connections_dto_1.GetConnectionsRequestsQueryDto), (0, asyncHandler_1.asyncHandler)(connections_controller_1.getConncetionsController));
+router.get("/suggestions", is_authenticated_midleware_1.default, (0, asyncHandler_1.asyncHandler)(connections_controller_1.getConncetionsSuggestionController));
+router.get("/requests", is_authenticated_midleware_1.default, (0, validate_query_midleware_1.default)(connections_dto_1.GetConnectionsRequestsQueryDto), (0, asyncHandler_1.asyncHandler)(connections_controller_1.getConnectionRequestsController));
+router.patch("/:connection_id/accept", is_authenticated_midleware_1.default, (0, asyncHandler_1.asyncHandler)(connections_controller_1.acceptConnectionRequestController));
+router.delete("/:connection_id/reject", is_authenticated_midleware_1.default, (0, asyncHandler_1.asyncHandler)(connections_controller_1.rejectConnectionRequestController));
+router.delete("/:connection_id/unconnect", is_authenticated_midleware_1.default, (0, asyncHandler_1.asyncHandler)(connections_controller_1.deleteConnectionController));
+exports.default = router;
