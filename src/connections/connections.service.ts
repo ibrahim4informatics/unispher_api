@@ -164,7 +164,29 @@ export const getUserConnectionRequestsService = async (user_id: string, query: G
             }
         },
         include: {
-            sender: true
+            sender: {
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                    avatar_url: true,
+                    role: true,
+                    teacher_profile: {
+                        select: {
+                            university: true,
+                            field_of_study: true,
+                            academic_title: true,
+                        }
+                    },
+                    student_profile: {
+                        select: {
+                            university: true,
+                            field: true
+                        }
+                    }
+
+                }
+            }
         },
 
         take: limit + 1,

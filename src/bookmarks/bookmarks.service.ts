@@ -56,7 +56,19 @@ export const getUserBookmarks = (user_id: string) => {
             user_id
         },
         include: {
-            post: true
+            post: {
+                include: {
+                    author: true,
+                    postMedias: true,
+                    _count: {
+                        select: {
+                            likes: true,
+                            comments: true,
+                            booksmarks: true
+                        }
+                    }
+                }
+            }
         }
     });
 
