@@ -7,7 +7,7 @@ export const getConncetionsController = async (req: Request, res: Response) => {
     const user_id = req.user.id;
     const query = req.query;
     const connections = await getUserConnectionsService(user_id, query);
-    return res.status(200).json({ connections });
+    return res.status(200).json(connections);
 
 }
 

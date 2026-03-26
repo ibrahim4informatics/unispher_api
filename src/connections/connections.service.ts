@@ -121,8 +121,48 @@ export const getUserConnectionsService = async (user_id: string, query: GetConne
 
         },
         include: {
-            sender: true,
-            receiver: true
+            sender: {
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                    avatar_url: true,
+                    role: true,
+                    teacher_profile: {
+                        select: {
+                            university: true,
+                            academic_title: true
+                        }
+                    },
+
+                    student_profile: {
+                        select: {
+                            university: true
+                        }
+                    }
+                }
+            },
+            receiver: {
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                    avatar_url: true,
+                    role: true,
+                    teacher_profile: {
+                        select: {
+                            university: true,
+                            academic_title: true
+                        }
+                    },
+
+                    student_profile: {
+                        select: {
+                            university: true
+                        }
+                    }
+                }
+            }
         },
         take: limit + 1,
         skip: (page - 1) * limit,
@@ -137,7 +177,7 @@ export const getUserConnectionsService = async (user_id: string, query: GetConne
         connections_db.pop()
     }
 
-    const connections = connections_db.map(c => c.sender_id === user_id ? c.receiver : c.sender);
+    const connections = connections_db.map(c => c.sender_id === user_id ? { ...c.receiver, connection_id: c.id } : { ...c.sender, connection_id: c.id });
     return { connections, has_more, page }
 }
 
@@ -211,7 +251,10 @@ export const getUserConnectionRequestsService = async (user_id: string, query: G
 export const deleteConnectionService = async (connection_id: number, user_id: string) => {
 
     const connection = await db.connection.findUnique({ where: { id: connection_id } });
-    if (!connection || connection.status !== "ACCEPTED") throw new NotFoundError("Connection can not be found");
+    if (!connection || connection.status !== "ACCEPTED") { 
+        
+        console.log("here")
+        throw new NotFoundError("Connection can not be found"); }
     if (connection.sender_id !== user_id && connection.receiver_id !== user_id) throw new BadRequestError("Can not delete this connection");
 
     await db.connection.delete({ where: { id: connection_id } });
@@ -268,6 +311,10 @@ export const getRecommendedConnectionsService = async (user_id: string, page: nu
                 { sender_id: { in: userConnectedIds }, status: "ACCEPTED" },
             ],
         },
+        select: {
+            receiver_id: true,
+            sender_id: true
+        },
         take: 80,
         orderBy: {
             created_at: "desc"
@@ -287,6 +334,7 @@ export const getRecommendedConnectionsService = async (user_id: string, page: nu
     const suggestions = await db.user.findMany({
         where: { id: { in: suggestionUserIds } },
         select: {
+            id:true,
             first_name: true,
             last_name: true,
             role: true,
@@ -306,5 +354,5 @@ export const getRecommendedConnectionsService = async (user_id: string, page: nu
     if (has_more) suggestions.pop();
 
 
-    return { suggestions, has_more };
+    return { suggestions, has_more, page };
 };
