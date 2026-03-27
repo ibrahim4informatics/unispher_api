@@ -251,10 +251,11 @@ export const getUserConnectionRequestsService = async (user_id: string, query: G
 export const deleteConnectionService = async (connection_id: number, user_id: string) => {
 
     const connection = await db.connection.findUnique({ where: { id: connection_id } });
-    if (!connection || connection.status !== "ACCEPTED") { 
-        
+    if (!connection || connection.status !== "ACCEPTED") {
+
         console.log("here")
-        throw new NotFoundError("Connection can not be found"); }
+        throw new NotFoundError("Connection can not be found");
+    }
     if (connection.sender_id !== user_id && connection.receiver_id !== user_id) throw new BadRequestError("Can not delete this connection");
 
     await db.connection.delete({ where: { id: connection_id } });
@@ -321,6 +322,20 @@ export const getRecommendedConnectionsService = async (user_id: string, page: nu
         }
     });
 
+    const userPendingConnections = await db.connection.findMany({
+        where: {
+            OR: [
+                { sender_id: user_id, status: "PENDING" },
+                { receiver_id: user_id, status: "PENDING" },
+            ]
+        },
+        select: {
+            sender_id: true,
+            receiver_id: true
+        }
+    })
+
+    const pendigConnectionIDS = userPendingConnections.map(conn => conn.receiver_id === user_id ? conn.sender_id : conn.receiver_id);
     const suggestionUserIds = Array.from(
         new Set(
             usersConnectedConnections.map(conn =>
@@ -328,19 +343,21 @@ export const getRecommendedConnectionsService = async (user_id: string, page: nu
             )
         )
     ).filter(
-        id => id !== user_id && !userConnectedIds.includes(id)
+        id => id !== user_id && !userConnectedIds.includes(id) && !pendigConnectionIDS.includes(id)
     );
 
     const suggestions = await db.user.findMany({
         where: { id: { in: suggestionUserIds } },
         select: {
-            id:true,
+            id: true,
             first_name: true,
             last_name: true,
             role: true,
             avatar_url: true,
             student_profile: { select: { university: true, field: true } },
-            teacher_profile: { select: { university: true, academic_title: true } },
+            teacher_profile: {
+                select: { university: true, academic_title: true },
+            },
         },
         take: limit + 1,
         skip: (page - 1) * limit,

@@ -144,8 +144,17 @@ const getUserById = async (user_id: string, current_user_id: string) => {
             id: user_id
         },
         include: {
-            student_profile: true,
-            teacher_profile: true,
+            student_profile: {
+                include: {
+                    university: true,
+                    field: true
+                }
+            },
+            teacher_profile: {
+                include: {
+                    university: true,
+                }
+            },
             admin_profile: true,
             _count: {
                 select: {
