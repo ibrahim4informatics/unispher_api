@@ -251,17 +251,17 @@ model Otp {
 }
 
 model User {
-  id                    String          @id @default(uuid())
-  first_name            String          @db.VarChar(35)
-  last_name             String          @db.VarChar(35)
-  bio                   String?         @db.VarChar(255)
+  id                    String            @id @default(uuid())
+  first_name            String            @db.VarChar(35)
+  last_name             String            @db.VarChar(35)
+  bio                   String?           @db.VarChar(255)
   avatar_url            String?
-  email                 String          @unique
+  email                 String            @unique
   password              String
-  student_id            String?         @unique
-  role                  UserRoles       @default(STUDENT)
-  status                UserStatus      @default(PENDING)
-  onboarding_completed  Boolean         @default(false)
+  student_id            String?           @unique
+  role                  UserRoles         @default(STUDENT)
+  status                UserStatus        @default(PENDING)
+  onboarding_completed  Boolean           @default(false)
   sessions              Session[]
   otps                  Otp[]
   id_card_url           String?
@@ -269,16 +269,18 @@ model User {
   teacher_profile       TeacherProfile?
   admin_profile         AdminProfile?
   deleted_at            DateTime?
-  updated_at            DateTime        @updatedAt
-  created_at            DateTime        @default(now())
+  updated_at            DateTime          @updatedAt
+  created_at            DateTime          @default(now())
   posts                 Post[]
   comments              Comment[]
   likes                 Like[]
   bookmarks             Bookmark[]
-  connections_received  Connection[]    @relation("receivedConnections")
-  connections_sent      Connection[]    @relation("sentConnections")
-  created_notifications Notification[]  @relation("notification_actor")
-  notifications         Notification[]  @relation("notification_receiver")
+  connections_received  Connection[]      @relation("receivedConnections")
+  connections_sent      Connection[]      @relation("sentConnections")
+  created_notifications Notification[]    @relation("notification_actor")
+  notifications         Notification[]    @relation("notification_receiver")
+  messages              Message[]
+  chatParticipants      ChatParticipant[]
 }
 
 model StudentProfile {
@@ -437,4 +439,47 @@ model Notification {
   actor_id    String
   actor       User             @relation(name: "notification_actor", fields: [actor_id], references: [id], onDelete: Cascade)
   created_at  DateTime         @default(now())
+}
+
+model Chat {
+  id              Int               @id @default(autoincrement())
+  messages        Message[]
+  participants    ChatParticipant[]
+  last_message_id Int?              @unique
+  last_message    Message?          @relation(name: "last_message", fields: [last_message_id], references: [id], onDelete: Cascade)
+  created_at      DateTime          @default(now())
+}
+
+model ChatParticipant {
+  id           Int       @id @default(autoincrement())
+  user_id      String
+  user         User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  chat_id      Int
+  last_read_at DateTime?
+  chat         Chat      @relation(fields: [chat_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, chat_id])
+}
+
+model Message {
+  id            Int                 @id @default(autoincrement())
+  sender_id     String?
+  sender        User?               @relation(fields: [sender_id], references: [id], onDelete: SetNull)
+  chat_id       Int
+  chat          Chat                @relation(fields: [chat_id], references: [id], onDelete: Cascade)
+  text          String?             @db.VarChar(200)
+  attachments   MessageAttachment[]
+  last_for_chat Chat?               @relation(name: "last_message")
+  created_at    DateTime            @default(now())
+
+  @@index([chat_id])
+  @@index([created_at])
+}
+
+model MessageAttachment {
+  id         Int       @id @default(autoincrement())
+  url        String
+  type       FileTypes
+  message_id Int
+  message    Message   @relation(fields: [message_id], references: [id], onDelete: Cascade)
 }
