@@ -82,7 +82,8 @@ export const getUserChatsService = async (user_id: string, page: number) => {
                     user: true
                 }
             },
-            last_message: true
+            last_message: true,
+            messages: true
         },
 
         orderBy: {
@@ -95,7 +96,18 @@ export const getUserChatsService = async (user_id: string, page: number) => {
     const has_more = chats.length > limit;
     if (has_more) chats.pop();
     return {
-        chats: chats.map(({ participants, ...chat }) => ({ participants: participants.filter(p => p.user_id !== user_id), ...chat })),
+        chats: chats.map(({ participants, ...chat }) => {
+
+            const otherParticipants = participants.filter(p => p.user_id !== user_id);
+            const lastReadAt = participants.filter(partcipant => partcipant.user_id === user_id)[0].last_read_at;
+            const unread = chat.messages.filter(message => !lastReadAt || message.created_at > lastReadAt).length;
+            return {
+                participants: otherParticipants,
+                unread,
+                ...chat,
+
+            }
+        }),
         page,
         has_more
     };
