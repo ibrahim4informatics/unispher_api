@@ -18,6 +18,7 @@ import commentsRouter from "./comments/comment.routes";
 import connectionsRouter from "./connections/connections.routes";
 import bookmarksRouter from "./bookmarks/bookmarks.routes";;
 import notificationsRouter from "./notfications/notifications.routes";
+import chatsRouter from "./chats/chats.routes";
 const app = express();
 
 
@@ -42,6 +43,7 @@ app.use("/api/comments", commentsRouter);
 app.use("/api/connections", connectionsRouter);
 app.use("/api/bookmarks", bookmarksRouter);
 app.use("/api/notifications", notificationsRouter);
+app.use("/api/chats", chatsRouter);
 
 app.get("/api/health", async (req: Request, res: Response) => {
     throw new NotFoundError("This route does not exist");

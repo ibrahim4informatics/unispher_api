@@ -447,6 +447,7 @@ model Chat {
   participants    ChatParticipant[]
   last_message_id Int?              @unique
   last_message    Message?          @relation(name: "last_message", fields: [last_message_id], references: [id], onDelete: Cascade)
+  updated_at      DateTime           @updatedAt
   created_at      DateTime          @default(now())
 }
 
