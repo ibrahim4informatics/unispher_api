@@ -113,3 +113,90 @@ export const getUserChatsService = async (user_id: string, page: number) => {
     };
 
 }
+
+
+export const getChatByUserIdIfExist = async (current_user_id: string, user_id: string) => {
+    if (current_user_id === user_id) throw new BadRequestError("Can not find chat with your own profile")
+    const chat = await db.chat.findFirst({
+        where: {
+            AND: [
+                {
+                    participants: {
+                        some: { user_id }
+                    }
+                },
+                {
+                    participants: {
+                        some: { user_id: current_user_id }
+                    }
+                },
+                {
+                    participants: {
+                        every: {
+                            user_id: {
+                                in: [current_user_id, user_id]
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        select: {
+            id: true
+        }
+    });
+
+    if (!chat) throw new NotFoundError("Chat Does not exist");
+    return chat;
+}
+
+
+export const getChatByIdService = async (user_id: string, chat_id: number) => {
+    const chat = await db.chat.findFirst({
+        where: {
+            id: chat_id,
+            participants: {
+                some: {
+                    user_id
+                }
+            }
+        },
+        include: {
+            participants: {
+                include: {
+                    user: true
+                }
+            }
+        }
+    });
+    if (!chat) throw new NotFoundError("Chat not found");
+    const otherParticipants = chat.participants.filter(p => p.user_id !== user_id);
+    const { participants, ...chatData } = chat;
+    return { ...chatData, participants: otherParticipants };
+}
+
+
+export const updateLastReadAtService = async (user_id: string, chat_id: number) => {
+    const chat = await db.chat.findFirst({
+        where: {
+            id: chat_id,
+            participants: {
+                some: {
+                    user_id
+                }
+            }
+        },
+    });
+    if (!chat) throw new NotFoundError("Chat not found");
+    await db.chatParticipant.update({
+        where: {
+            user_id_chat_id: {
+                chat_id,
+                user_id
+            }
+        },
+        data: {
+            last_read_at: new Date()
+        }
+    });
+}
