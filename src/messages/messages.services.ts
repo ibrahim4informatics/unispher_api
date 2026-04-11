@@ -1,22 +1,16 @@
 
-import { FileTypes } from "@prisma/client"
 import db from "../config/db"
-import { BadRequestError } from "../shared/errors/BadRequestError"
-import { uploadToCloudinary } from "../shared/services/cloudinary.service"
 
-type MessageAttachment = {
-    type: FileTypes,
-    url: string
-}
+
+
 type Message = {
     text: string,
     chat_id: number,
     sender_id: string,
-    attachments?: MessageAttachment[]
 }
 
 export const createMessage = async (data: Message) => {
-    const { text, chat_id, sender_id, attachments } = data;
+    const { text, chat_id, sender_id } = data;
 
     const chat = await db.chat.findFirst({
         where: {
@@ -36,13 +30,7 @@ export const createMessage = async (data: Message) => {
             text,
             chat_id,
             sender_id,
-            attachments: {
-                create: attachments || []
-            }
         },
-        include: {
-            attachments: true
-        }
     });
 
     return message;
@@ -76,9 +64,6 @@ export const getMessagesByChatIdService = async (data: { chat_id: number, user_i
         orderBy: {
             created_at: "desc"
         },
-        include: {
-            attachments: true,
-        }
 
     });
     const has_more = messages.length > limit;
@@ -95,43 +80,3 @@ export const getMessagesByChatIdService = async (data: { chat_id: number, user_i
 }
 
 
-export const uploadAttachmentService = async (sender_id: string, chat_id: number, file?: Express.Multer.File) => {
-
-    if (!file) throw new BadRequestError("No file provided");
-    const chat = await db.chat.findFirst({
-        where: {
-            id: chat_id,
-            participants: {
-                some: {
-                    user_id: sender_id
-                }
-            }
-        }
-    });
-    if (!chat) {
-        throw new BadRequestError("Chat not found");
-    }
-
-    const url = await uploadToCloudinary(file, `chats/${chat_id}/messages/${sender_id}`);
-    const message = await db.message.create({
-        data: {
-            chat_id,
-            sender_id,
-            last_for_chat: {
-                connect: {
-                    id: chat_id
-                }
-            },
-            attachments: {
-                create: {
-                    type: file.mimetype.split("/")[0].toUpperCase() as FileTypes,
-                    url
-                }
-            }
-        }
-    });
-
-    return message;
-
-
-}

@@ -56,11 +56,11 @@ io.on("connection", (socket) => {
         const { chat_id, text } = message;
         console.log("send")
         // create message in database and get the created message with id and timestamps
-        const msg = await createMessage({ chat_id, text, sender_id: socket.data.user.id, attachments: [] });
+        const msg = await createMessage({ chat_id, text, sender_id: socket.data.user.id});
         await db.chat.update({ where: { id: chat_id }, data: { last_message_id: msg.id } });
         await db.chatParticipant.update({ where: { user_id_chat_id: { user_id: socket.data.user.id, chat_id } }, data: { last_read_at: new Date() } });
-        const { sender_id, attachments, created_at, id } = msg;
-        io.to(chat_id.toString()).emit("new-message", { text, sender_id, attachments, chat_id, created_at, id });
+        const { sender_id, created_at, id } = msg;
+        io.to(chat_id.toString()).emit("new-message", { text, sender_id, chat_id, created_at, id });
 
     })
     socket.on("disconnect", () => {

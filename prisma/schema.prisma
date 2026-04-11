@@ -469,18 +469,9 @@ model Message {
   chat_id       Int
   chat          Chat                @relation(fields: [chat_id], references: [id], onDelete: Cascade)
   text          String?             @db.VarChar(200)
-  attachments   MessageAttachment[]
   last_for_chat Chat?               @relation(name: "last_message")
   created_at    DateTime            @default(now())
 
   @@index([chat_id])
   @@index([created_at])
-}
-
-model MessageAttachment {
-  id         Int       @id @default(autoincrement())
-  url        String
-  type       FileTypes
-  message_id Int
-  message    Message   @relation(fields: [message_id], references: [id], onDelete: Cascade)
 }

@@ -7,9 +7,9 @@ export const getuserNotificationsController = async (req: Request, res: Response
     const user_id = req.user.id;
     const page = parseInt(req.params.page as string) || 1;
     const notifications = await getUserNotification(user_id, page);
-    return res.status(200).json({
+    return res.status(200).json(
         notifications
-    })
+    )
 }
 
 
