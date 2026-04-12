@@ -90,6 +90,13 @@ enum ConnectionStatus {
   ACCEPTED
 }
 
+enum CourseStatus {
+  DRAFT
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 model University {
   id              String           @id @default(uuid())
   name            String
@@ -182,6 +189,7 @@ model Course {
   code              String
   description       String
   courseSections    CourseSection[]
+  status            CourseStatus       @default(DRAFT)
   module_id         Int
   module            Module             @relation(fields: [module_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   publisher_id      Int
@@ -447,7 +455,7 @@ model Chat {
   participants    ChatParticipant[]
   last_message_id Int?              @unique
   last_message    Message?          @relation(name: "last_message", fields: [last_message_id], references: [id], onDelete: Cascade)
-  updated_at      DateTime           @updatedAt
+  updated_at      DateTime          @updatedAt
   created_at      DateTime          @default(now())
 }
 
@@ -463,14 +471,14 @@ model ChatParticipant {
 }
 
 model Message {
-  id            Int                 @id @default(autoincrement())
+  id            Int      @id @default(autoincrement())
   sender_id     String?
-  sender        User?               @relation(fields: [sender_id], references: [id], onDelete: SetNull)
+  sender        User?    @relation(fields: [sender_id], references: [id], onDelete: SetNull)
   chat_id       Int
-  chat          Chat                @relation(fields: [chat_id], references: [id], onDelete: Cascade)
-  text          String?             @db.VarChar(200)
-  last_for_chat Chat?               @relation(name: "last_message")
-  created_at    DateTime            @default(now())
+  chat          Chat     @relation(fields: [chat_id], references: [id], onDelete: Cascade)
+  text          String?  @db.VarChar(200)
+  last_for_chat Chat?    @relation(name: "last_message")
+  created_at    DateTime @default(now())
 
   @@index([chat_id])
   @@index([created_at])
