@@ -125,6 +125,7 @@ model Faculty {
   students      StudentProfile[]
   updated_at    DateTime         @updatedAt
   created_at    DateTime         @default(now())
+  courses       Course[]
 }
 
 model Department {
@@ -153,6 +154,9 @@ model Field {
   updated_at      DateTime         @updatedAt
   created_at      DateTime         @default(now())
   studentProfiles StudentProfile[]
+  courses         Course[]
+  modules         Module[]
+  moduleId        Int?
 }
 
 model Level {
@@ -174,13 +178,13 @@ model Module {
   id         Int      @id @default(autoincrement())
   name       String
   code       String
-  level_id   Int
-  level      Level    @relation(fields: [level_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  fields     Field[]
+  levels      Level[]
   courses    Course[]
   updated_at DateTime @updatedAt
   created_at DateTime @default(now())
 
-  @@index([level_id])
+  @@index([name])
 }
 
 model Course {
@@ -190,6 +194,10 @@ model Course {
   description       String
   courseSections    CourseSection[]
   status            CourseStatus       @default(DRAFT)
+  field_id          Int
+  field             Field              @relation(fields: [field_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  faculty_id        Int
+  faculty           Faculty            @relation(fields: [faculty_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   module_id         Int
   module            Module             @relation(fields: [module_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   publisher_id      Int
