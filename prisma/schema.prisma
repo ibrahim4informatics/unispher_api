@@ -179,7 +179,7 @@ model Module {
   name       String
   code       String
   fields     Field[]
-  levels      Level[]
+  levels     Level[]
   courses    Course[]
   updated_at DateTime @updatedAt
   created_at DateTime @default(now())
@@ -191,7 +191,7 @@ model Course {
   id                String             @id @default(uuid())
   name              String
   code              String
-  description       String
+  description       String             @db.LongText
   courseSections    CourseSection[]
   status            CourseStatus       @default(DRAFT)
   field_id          Int
@@ -202,10 +202,11 @@ model Course {
   module            Module             @relation(fields: [module_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   publisher_id      Int
   publisher         TeacherProfile     @relation(fields: [publisher_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  enrolled_students StudentProfile[]
   updated_at        DateTime           @updatedAt
   created_at        DateTime           @default(now())
   courseEnrollments CourseEnrollment[]
+  studentProfile    StudentProfile?    @relation(fields: [studentProfileId], references: [id])
+  studentProfileId  Int?
 }
 
 model CourseSection {
