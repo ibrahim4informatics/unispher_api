@@ -191,7 +191,9 @@ export const updateCourseService = async (user_id: string, course_id: string, da
 }
 
 
-export const getCourseDetailsService = async (course_id: string) => {
+export const getCourseDetailsService = async (course_id: string, user_id: string) => {
+    const student = await db.studentProfile.findUnique({ where: { user_id } });
+    if (!student) throw new ForbiddenError("Can Not find student profile");
     const course = await db.course.findUnique({
         where: {
             id: course_id,
@@ -236,6 +238,11 @@ export const getCourseDetailsService = async (course_id: string) => {
                     }
                 }
             },
+            courseEnrollments: {
+                select: {
+                    student_id: true
+                }
+            },
             _count: {
                 select: {
                     courseEnrollments: true,
@@ -245,7 +252,7 @@ export const getCourseDetailsService = async (course_id: string) => {
         }
     });
     if (!course) throw new NotFoundError("Course not found");
-    return course;
+    return { course, is_enrolled: course.courseEnrollments.map(e => e.student_id).includes(student.id) };
 }
 
 

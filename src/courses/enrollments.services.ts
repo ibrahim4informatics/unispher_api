@@ -1,4 +1,5 @@
 import db from "../config/db";
+import { BadRequestError } from "../shared/errors/BadRequestError";
 import { NotFoundError } from "../shared/errors/NotFoundError";
 
 export const enrollStudentService = async (user_id: string, course_id: string) => {
@@ -17,7 +18,7 @@ export const enrollStudentService = async (user_id: string, course_id: string) =
         where: { student_id: student.id, course_id }
     });
 
-    if (existing) throw new Error("Already enrolled");
+    if (existing) throw new BadRequestError("Already enrolled");
 
     const course = await db.course.findUnique({
         where: { id: course_id }
@@ -75,11 +76,29 @@ export const getEnrolledCoursesService = async (user_id: string, page: number = 
     if (!student) throw new NotFoundError("Student profile not found");
     const enrollments = await db.courseEnrollment.findMany({
         where: {
-            student_id: student.id
+            student_id: student.id,
+            course: {
+                status: "ACCEPTED"
+            }
         },
         include: {
             course: {
                 include: {
+                    field: true,
+                    faculty: {
+                        include: {
+                            university: true
+                        }
+                    },
+                    publisher: { include: { user: true } },
+                    module: {
+                        include: {
+                            
+                            levels: {
+                                distinct:"name"
+                            }
+                        }
+                    },
                     _count: {
                         select: {
                             courseSections: true
@@ -91,12 +110,14 @@ export const getEnrolledCoursesService = async (user_id: string, page: number = 
         take: limitPerPage + 1,
         skip: (page - 1) * limitPerPage,
         orderBy: {
-            updated_at: "desc"
+            course: {
+                updated_at: "desc"
+            }
         }
     });
     const has_more = enrollments.length > limitPerPage;
     if (has_more) enrollments.pop();
-    return { courses: enrollments.map(e => ({ ...e.course })), has_more, page };
+    return { courses: enrollments.map(e => ({ ...e.course, current_course_section: e.current_course_section_id, is_enrolled: true })), has_more, page };
 };
 
 

@@ -28,8 +28,9 @@ export const getOwnCoursesController = async (req: Request, res: Response) => {
 
 export const getCourseDetailsController = async (req: Request, res: Response) => {
     const course_id = req.params.course_id as string;
-    const course = await getCourseDetailsService(course_id);
-    return res.status(200).json({ course });
+    const user_id = req.user.id;
+    const course = await getCourseDetailsService(course_id, user_id);
+    return res.status(200).json(course);
 }
 
 export const updateCourseController = async (req: Request, res: Response) => {

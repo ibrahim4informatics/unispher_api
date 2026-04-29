@@ -37,6 +37,7 @@ router.get("/:course_id/sections", isAuthenticated, asyncHandler(getCourseSectio
 
 // enroll in course
 router.post("/:course_id/enrollments", isAuthenticated, hasRoleOf(["STUDENT"]), asyncHandler(enrollStudentController));
+// check if user enrolled or not in course
 router.get("/:course_id/enrollments/me", isAuthenticated, hasRoleOf(["STUDENT"]), asyncHandler(getStudentEnrollmentController));
 // quit course
 router.delete("/:course_id/enrollments", isAuthenticated, hasRoleOf(["STUDENT"]), asyncHandler(unenrollStudentController));
