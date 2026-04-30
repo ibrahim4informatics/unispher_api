@@ -31,7 +31,8 @@ export const deleteSectionController = async (req: Request, res: Response) => {
 export const getCourseSectionsController = async (req: Request, res: Response) => {
     const { course_id } = req.params;
     const user_id = req.user.id;
-    const sections = await getCourseSectionsService(user_id, course_id as string);
+    const page = req.query.page as string
+    const sections = await getCourseSectionsService(user_id, course_id as string, parseInt(page));
     res.status(200).json(sections);
 }
 
