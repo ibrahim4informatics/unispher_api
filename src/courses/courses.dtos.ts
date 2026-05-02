@@ -22,7 +22,7 @@ export type CreateCourseDto = z.infer<typeof CreateCourseDto>
 
 
 export const GetCoursesQuery = z.object({
-    page: z.number().optional(),
+    page: z.string().optional(),
     name: z.string().max(100).optional(),
     code: z.string().max(30).optional(),
     module_id: z.number().optional(),

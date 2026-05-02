@@ -30,9 +30,12 @@ export const createCourseService = async (user_id: string, data: CreateCourseDto
 
     if (!module) throw new BadRequestError("Module Field Mismatched");
 
+    console.log(data.status);
+
     const newCourse = await db.course.create({
         data: {
             ...data,
+            status: data.status,
             publisher_id: teacher.id,
         }
     });
@@ -43,7 +46,7 @@ export const createCourseService = async (user_id: string, data: CreateCourseDto
 
 export const getCoursesService = async (user_id: string, query: GetCourseQuery) => {
     const limit = 20;
-    const page = query.page || 1;
+    const page = parseInt(query.page || "1");
 
     const student = await db.studentProfile.findUnique({
         where: {
@@ -110,7 +113,7 @@ export const getCoursesService = async (user_id: string, query: GetCourseQuery) 
 
 export const getOwnCoursesService = async (user_id: string, query: GetCourseQuery) => {
     const limit = 20;
-    const page = query.page || 1;
+    const page = parseInt(query.page || "1");
 
     const teacher = await db.teacherProfile.findUnique({ where: { user_id }, select: { id: true } });
 
@@ -309,4 +312,14 @@ export const getOwnCourseDetailsService = async (user_id: string, course_id: str
     });
     if (!course) throw new NotFoundError("Course not found");
     return course;
+}
+
+
+export const deleteOwnCourseService = async (user_id: string, course_id: string) => {
+    const teacher = await db.teacherProfile.findUnique({ where: { user_id }, select: { id: true } });
+    if (!teacher) throw new ForbiddenError("Can not delete course");
+    const course = await db.course.findFirst({ where: { publisher_id: teacher.id, id: course_id } });
+    if (!course) throw new NotFoundError("Course you want to delete does not exists");
+    console.log(course.id)
+    await db.course.delete({ where: { id: course.id } });
 }

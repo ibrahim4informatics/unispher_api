@@ -4,7 +4,7 @@ import hasRoleOf from "../midlewares/auth/has-role-of";
 import validate from "../midlewares/validate.midleware";
 import { CreateCourseDto, CreateSectionDto } from "./courses.dtos";
 import { asyncHandler } from "../shared/asyncHandler";
-import { createCourseController, getCourseDetailsController, getCoursesController, getOwnCourseDetailsController, getOwnCoursesController, updateCourseController } from "./courses.controllers";
+import { createCourseController, deleteOwnCourseController, getCourseDetailsController, getCoursesController, getOwnCourseDetailsController, getOwnCoursesController, updateCourseController } from "./courses.controllers";
 import { createSectionController, deleteSectionController, deleteSectionMaterialController, getCourseSectionsController, getSectionDetailsController, updateSectionController, uploadSectionMaterialController } from "./sections.controllers";
 import uploadCourseMaterials from "../midlewares/multer/uploadCourseMaterials";
 import { deleteEnrollmentController, enrollStudentController, getEnrolledCoursesController, getStudentEnrollmentController, getStudentsEnrolledByCourseIdController, unenrollStudentController } from "./enrollments.controllers";
@@ -69,6 +69,7 @@ router.delete("/:course_id/sections/:section_id", isAuthenticated, hasRoleOf(["T
 
 // get own course details (only teacher & owner)
 router.get("/my-courses/:course_id", isAuthenticated, hasRoleOf(["TEACHER"]), asyncHandler(getOwnCourseDetailsController));
+router.delete("/my-courses/:course_id", isAuthenticated, hasRoleOf(["TEACHER"]), asyncHandler(deleteOwnCourseController));
 // // Get single course details
 router.get("/:course_id", isAuthenticated, hasRoleOf(["STUDENT"]), asyncHandler(getCourseDetailsController));
 // // Update course (only  & owner)

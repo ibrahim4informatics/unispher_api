@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { CreateCourseDto, GetCourseQuery } from "./courses.dtos";
-import { createCourseService, getCourseDetailsService, getCoursesService, getOwnCourseDetailsService, getOwnCoursesService, updateCourseService } from "./courses.services";
+import { createCourseService, deleteOwnCourseService, getCourseDetailsService, getCoursesService, getOwnCourseDetailsService, getOwnCoursesService, updateCourseService } from "./courses.services";
 
 export const createCourseController = async (req: Request, res: Response) => {
     const data = req.body as CreateCourseDto;
@@ -49,3 +49,12 @@ export const getOwnCourseDetailsController = async (req: Request, res: Response)
     return res.status(200).json({ course });
 }
 
+export const deleteOwnCourseController = async (req: Request, res: Response) => {
+    const user_id = req.user.id;
+    const course_id = req.query.course_id as string;
+
+    console.log('first')
+
+    await deleteOwnCourseService(user_id, course_id);
+    return res.status(200).json({ messsage: "Course deleted successfully" });
+}

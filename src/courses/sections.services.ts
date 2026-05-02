@@ -24,6 +24,7 @@ export const createSectionService = async (user_id: string, course_id: string, d
         }
     })
 
+
     if (files && files.length > 0) {
 
         const uploadPromises = files.map(file => uploadToCloudinary(file, `courses-materials/${course_id}/${section.id}`));
