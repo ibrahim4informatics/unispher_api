@@ -73,7 +73,7 @@ router.delete("/my-courses/:course_id", isAuthenticated, hasRoleOf(["TEACHER"]),
 // // Get single course details
 router.get("/:course_id", isAuthenticated, hasRoleOf(["STUDENT"]), asyncHandler(getCourseDetailsController));
 // // Update course (only  & owner)
-router.patch("/:course_id", isAuthenticated, hasRoleOf(["TEACHER"]), asyncHandler(updateCourseController));
+router.patch("/:course_id", isAuthenticated, hasRoleOf(["TEACHER"]), validate(CreateCourseDto.partial()), asyncHandler(updateCourseController));
 
 
 

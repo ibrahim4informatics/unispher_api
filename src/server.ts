@@ -6,11 +6,11 @@ import { createMessage } from "./messages/messages.services";
 import db from "./config/db";
 
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const server = createServer(app);
 
 server.listen(PORT, () => {
-    console.log(`server is running on http://localhost:${PORT}`)
+    console.log(`server is running on  ${PORT}`)
 })
 
 

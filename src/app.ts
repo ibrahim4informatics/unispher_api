@@ -22,6 +22,7 @@ import chatsRouter from "./chats/chats.routes";
 import messagesRouter from "./messages/messages.routes";
 import modulesRouter from "./modules/modules.routes";
 import coursesRouter from "./courses/courses.routes";
+// import { setupAdmin } from "./admin/admin";
 const app = express();
 
 
@@ -30,6 +31,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors({ origin: "*" }));
 app.use(userAgent())
 
+
+// setupAdmin(app);
 
 app.use("/api/auth", authRouter);
 app.use("/api/university", universityRouter);
