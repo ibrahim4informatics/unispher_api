@@ -55,7 +55,7 @@ app.use("/api/modules", modulesRouter);
 app.use("/api/courses", coursesRouter);
 
 app.get("/api/health", async (req: Request, res: Response) => {
-    throw new NotFoundError("This route does not exist");
+    return res.status(200).json({message:"api works"})
 });
 app.use(globalErrorHandler);
 
