@@ -112,7 +112,7 @@ const loginUserService = async (data: UserLoginBody, device: string) => {
         if (user?.role === "STUDENT") throw new BadRequestError("Can not login with email");
     }
 
-    if (!user) throw new UnauthorizedError("Invalid email or password");
+    if (!user || user.status !== "CONFIRMED") throw new UnauthorizedError("Invalid email or password");
 
     const isCorrectPassword: boolean = await verify(password, user.password);
     if (!isCorrectPassword) throw new UnauthorizedError("Invalid email or password");
@@ -160,7 +160,7 @@ const sendPasswordOtpService = async (user_email: string) => {
 
     const user = await db.user.findUnique({ where: { email: user_email } });
 
-    if (!user) throw new BadRequestError("Email provided is invalid");
+    if (!user || user.status !== "CONFIRMED") throw new BadRequestError("Email provided is invalid");
     const otp_code = otpGenerator.generate(6, { digits: true, specialChars: false, upperCaseAlphabets: false, lowerCaseAlphabets: false });
 
     // Create otp in db

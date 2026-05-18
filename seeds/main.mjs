@@ -2,8 +2,8 @@ import { createAdmin } from "./create_admin.mjs";
 import { universitySeeder } from "./university.mjs";
 
 async function main() {
-    // await universitySeeder();
-    await createAdmin();
+    await universitySeeder();
+    // await createAdmin();
 }
 
 
