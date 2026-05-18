@@ -13,7 +13,10 @@ const transport = nodemailer.createTransport(
         host: "smtp.gmail.com",
         port: 587,
         secure: false,
-        // service:"gmail",
+
+        dnsTimeout: 10000,
+        debug: true,
+        logger: true,
         auth: {
             user: "appunisphere@gmail.com",
             pass: ENV.GMAIL_APP_PASSWORD
