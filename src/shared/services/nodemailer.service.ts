@@ -23,6 +23,7 @@ const sendMail = async (mailOptions: MailOptions) => {
     }
 
     catch (err) {
+        console.log(err)
         throw new AppError("Reset password failed due to email services", 501)
     }
 
