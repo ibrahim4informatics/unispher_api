@@ -10,10 +10,10 @@ dns.setDefaultResultOrder('ipv4first')
 const transport = nodemailer.createTransport(
     {
 
-        service: "gmail",
-        port: 587,
-        secure: false,
         host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
+        service:"gmail",
         auth: {
             user: "appunisphere@gmail.com",
             pass: ENV.GMAIL_APP_PASSWORD
