@@ -2,12 +2,18 @@ import nodemailer from "nodemailer";
 import { MailOptions } from "nodemailer/lib/json-transport";
 import ENV from "../../config/ENV";
 import { AppError } from "../errors/AppError";
+import dns from 'dns'
 
+dns.setDefaultResultOrder('ipv4first')
 //Initialize nodemailer
 
 const transport = nodemailer.createTransport(
     {
+
         service: "gmail",
+        port: 587,
+        secure: false,
+        host: "smtp.gmail.com",
         auth: {
             user: "appunisphere@gmail.com",
             pass: ENV.GMAIL_APP_PASSWORD
